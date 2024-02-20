@@ -7,4 +7,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface MerchantRepository extends JpaRepository<Merchant, Long> {
     boolean existsByApiKey(String apiKey);
+    Merchant findByApiKey(String apiKey);
 }

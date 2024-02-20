@@ -37,8 +37,8 @@ public class Wallet {
     @Column(name = "address", nullable = true)
     private String address;
 
-    @Column(name = "amount", nullable = true)
-    private Double amount;
+    @Column(name = "balance", nullable = true)
+    private Long balance;
 
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "merchant_id", nullable = false)
