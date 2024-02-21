@@ -15,6 +15,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -34,7 +35,7 @@ public class PaymentController {
             @ApiResponse(responseCode = "200", description = "We have get QR-code for the invoice address")
     })
     public ResponseEntity<byte[]> createQr(@RequestHeader(name = "X-API-KEY") String apiKey,
-                                                  @RequestBody CreatePaymentQrRequest createPaymentQrRequest) {
+                                                  @Validated @RequestBody CreatePaymentQrRequest createPaymentQrRequest) {
         return paymentService.createQr(apiKey, createPaymentQrRequest);
     }
 
@@ -45,7 +46,7 @@ public class PaymentController {
     })
     @PostMapping("/payment")
     public CreatePaymentResponse createInvoice(@RequestHeader(name = "X-API-KEY") String apiKey,
-                                               @RequestBody CreatePaymentRequest createPaymentRequest) {
+                                               @Validated @RequestBody CreatePaymentRequest createPaymentRequest) {
         return paymentService.create(apiKey, createPaymentRequest);
     }
 }

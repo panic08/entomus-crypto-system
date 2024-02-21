@@ -38,7 +38,7 @@ public class Wallet {
     private String address;
 
     @Column(name = "balance", nullable = true)
-    private Long balance;
+    private String balance;
 
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "merchant_id", nullable = false)

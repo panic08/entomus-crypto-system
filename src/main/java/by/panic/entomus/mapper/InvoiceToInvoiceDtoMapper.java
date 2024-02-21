@@ -28,7 +28,7 @@ public interface InvoiceToInvoiceDtoMapper {
             @Mapping(target = "additionalData", source = "additionalData"),
             @Mapping(target = "urlReturn", source = "urlReturn"),
             @Mapping(target = "urlSuccess", source = "urlSuccess"),
-            @Mapping(target = "isFinal", source = "isFinal"),
+            @Mapping(target = "final", source = "isFinal"),
             @Mapping(target = "expiredAt", source = "expiredAt"),
             @Mapping(target = "updatedAt", source = "updatedAt"),
 

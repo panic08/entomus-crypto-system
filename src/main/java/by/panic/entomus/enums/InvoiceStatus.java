@@ -2,5 +2,7 @@ package by.panic.entomus.enums;
 
 public enum InvoiceStatus {
     PENDING,
-    SUCCESS
+    SUCCESS,
+    FOUND,
+    EXPIRED
 }

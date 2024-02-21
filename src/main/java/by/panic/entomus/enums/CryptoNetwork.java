@@ -5,7 +5,7 @@ public enum CryptoNetwork {
     BTC,
     TRX,
     BNB,
-    MATIC,
+    POLYGON,
     ETC,
     AVAX,
     BCH,

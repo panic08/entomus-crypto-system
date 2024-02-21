@@ -43,7 +43,7 @@ public class MerchantServiceImpl implements MerchantService {
                         .network(CryptoNetwork.AVAX)
                         .token(CryptoToken.AVAX)
                         .type(WalletType.BUSINESS)
-                        .balance(0L)
+                        .balance("0")
                         .build()
         );
 
@@ -54,7 +54,7 @@ public class MerchantServiceImpl implements MerchantService {
                         .network(CryptoNetwork.BTC)
                         .token(CryptoToken.BTC)
                         .type(WalletType.BUSINESS)
-                        .balance(0L)
+                        .balance("0")
                         .build()
         );
 
@@ -65,7 +65,7 @@ public class MerchantServiceImpl implements MerchantService {
                         .network(CryptoNetwork.LTC)
                         .token(CryptoToken.LTC)
                         .type(WalletType.BUSINESS)
-                        .balance(0L)
+                        .balance("0")
                         .build()
         );
 
@@ -76,7 +76,7 @@ public class MerchantServiceImpl implements MerchantService {
                         .network(CryptoNetwork.BCH)
                         .token(CryptoToken.BCH)
                         .type(WalletType.BUSINESS)
-                        .balance(0L)
+                        .balance("0")
                         .build()
         );
 
@@ -87,7 +87,7 @@ public class MerchantServiceImpl implements MerchantService {
                         .network(CryptoNetwork.BNB)
                         .token(CryptoToken.BNB)
                         .type(WalletType.BUSINESS)
-                        .balance(0L)
+                        .balance("0")
                         .build()
         );
 
@@ -98,7 +98,7 @@ public class MerchantServiceImpl implements MerchantService {
                         .network(CryptoNetwork.ETC)
                         .token(CryptoToken.ETC)
                         .type(WalletType.BUSINESS)
-                        .balance(0L)
+                        .balance("0")
                         .build()
         );
 
@@ -109,7 +109,7 @@ public class MerchantServiceImpl implements MerchantService {
                         .network(CryptoNetwork.ETH)
                         .token(CryptoToken.ETH)
                         .type(WalletType.BUSINESS)
-                        .balance(0L)
+                        .balance("0")
                         .build()
         );
 
@@ -117,10 +117,10 @@ public class MerchantServiceImpl implements MerchantService {
                 Wallet.builder()
                         .merchant(merchant)
                         .uuid(existsOnWalletUUID(UUID.randomUUID().toString()))
-                        .network(CryptoNetwork.MATIC)
+                        .network(CryptoNetwork.POLYGON)
                         .token(CryptoToken.MATIC)
                         .type(WalletType.BUSINESS)
-                        .balance(0L)
+                        .balance("0")
                         .build()
         );
 
@@ -131,7 +131,7 @@ public class MerchantServiceImpl implements MerchantService {
                         .network(CryptoNetwork.SOL)
                         .token(CryptoToken.SOL)
                         .type(WalletType.BUSINESS)
-                        .balance(0L)
+                        .balance("0")
                         .build()
         );
 
@@ -142,7 +142,7 @@ public class MerchantServiceImpl implements MerchantService {
                         .network(CryptoNetwork.TRX)
                         .token(CryptoToken.TRX)
                         .type(WalletType.BUSINESS)
-                        .balance(0L)
+                        .balance("0")
                         .build()
         );
 
@@ -153,7 +153,7 @@ public class MerchantServiceImpl implements MerchantService {
                         .network(CryptoNetwork.ETH)
                         .token(CryptoToken.USDT)
                         .type(WalletType.BUSINESS)
-                        .balance(0L)
+                        .balance("0")
                         .build()
         );
 
@@ -164,7 +164,7 @@ public class MerchantServiceImpl implements MerchantService {
                         .network(CryptoNetwork.ETH)
                         .token(CryptoToken.USDC)
                         .type(WalletType.BUSINESS)
-                        .balance(0L)
+                        .balance("0")
                         .build()
         );
 
@@ -175,7 +175,7 @@ public class MerchantServiceImpl implements MerchantService {
                         .network(CryptoNetwork.ETH)
                         .token(CryptoToken.DAI)
                         .type(WalletType.BUSINESS)
-                        .balance(0L)
+                        .balance("0")
                         .build()
         );
 
@@ -186,7 +186,7 @@ public class MerchantServiceImpl implements MerchantService {
                         .network(CryptoNetwork.TRX)
                         .token(CryptoToken.USDT)
                         .type(WalletType.BUSINESS)
-                        .balance(0L)
+                        .balance("0")
                         .build()
         );
 
@@ -197,7 +197,7 @@ public class MerchantServiceImpl implements MerchantService {
                         .network(CryptoNetwork.TRX)
                         .token(CryptoToken.USDC)
                         .type(WalletType.BUSINESS)
-                        .balance(0L)
+                        .balance("0")
                         .build()
         );
 
@@ -208,7 +208,7 @@ public class MerchantServiceImpl implements MerchantService {
                         .network(CryptoNetwork.BNB)
                         .token(CryptoToken.USDT)
                         .type(WalletType.BUSINESS)
-                        .balance(0L)
+                        .balance("0")
                         .build()
         );
 
@@ -219,7 +219,7 @@ public class MerchantServiceImpl implements MerchantService {
                         .network(CryptoNetwork.BNB)
                         .token(CryptoToken.USDC)
                         .type(WalletType.BUSINESS)
-                        .balance(0L)
+                        .balance("0")
                         .build()
         );
 
@@ -230,7 +230,7 @@ public class MerchantServiceImpl implements MerchantService {
                         .network(CryptoNetwork.BNB)
                         .token(CryptoToken.DAI)
                         .type(WalletType.BUSINESS)
-                        .balance(0L)
+                        .balance("0")
                         .build()
         );
 

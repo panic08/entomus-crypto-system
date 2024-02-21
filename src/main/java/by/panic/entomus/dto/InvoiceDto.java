@@ -23,6 +23,10 @@ public class InvoiceDto {
 
     private double payerAmount;
 
+    private double discount;
+
+    private int discountPercent;
+
     private InvoicePaymentCurrency currency;
 
     private String merchantAmount;
@@ -32,8 +36,6 @@ public class InvoiceDto {
     private CryptoToken token;
 
     private String address;
-
-    private String from;
 
     private String txId;
 
