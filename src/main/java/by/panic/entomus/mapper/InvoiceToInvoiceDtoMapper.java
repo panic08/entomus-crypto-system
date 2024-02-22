@@ -23,7 +23,6 @@ public interface InvoiceToInvoiceDtoMapper {
             @Mapping(target = "network", source = "network"),
             @Mapping(target = "token", source = "token"),
             @Mapping(target = "address", source = "address"),
-            @Mapping(target = "from", source = "from"),
             @Mapping(target = "txId", source = "txId"),
             @Mapping(target = "additionalData", source = "additionalData"),
             @Mapping(target = "urlReturn", source = "urlReturn"),

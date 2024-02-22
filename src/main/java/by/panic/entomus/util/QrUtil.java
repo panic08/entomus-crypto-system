@@ -19,16 +19,15 @@ import java.util.Hashtable;
 
 @Component
 public class QrUtil {
-    public void generateQRCode(String text, String filePath, int width, int height)
+    public byte[] generateQRCode(String text, int width, int height)
             throws WriterException, IOException {
         QRCodeWriter qrCodeWriter = new QRCodeWriter();
         BitMatrix bitMatrix = qrCodeWriter.encode(text, BarcodeFormat.QR_CODE, width, height);
 
         ByteArrayOutputStream pngOutputStream = new ByteArrayOutputStream();
         MatrixToImageWriter.writeToStream(bitMatrix, "PNG", pngOutputStream);
-        byte[] pngData = pngOutputStream.toByteArray();
 
-        File qrFile = new File(filePath);
-        ImageIO.write(ImageIO.read(new ByteArrayInputStream(pngData)), "PNG", qrFile);
+
+        return pngOutputStream.toByteArray();
     }
 }

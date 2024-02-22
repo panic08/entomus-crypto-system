@@ -28,7 +28,7 @@ public class CreatePaymentRequest {
     private CryptoToken token;
 
     @NotNull(message = "Order_id not may be null")
-    @Pattern(regexp = "[a-zA-Z0-9&\\-_+//]*", message = "Order_id must be a string consisting of alphabetic characters, numbers, underscores, and dashes.")
+    @Pattern(regexp = "[a-zA-Z0-9&\\-_+//]*", message = "Order_id must be a string consisting of alphabetic characters, numbers, underscores, and dashes")
     @Size(min = 1, max = 128, message = "Order_id must contain from 1 to 128 characters")
     private String orderId;
 

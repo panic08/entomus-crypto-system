@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/payout")
-@Tag(name = "Payments", description = "This component describes the Payouts API")
+@Tag(name = "Payouts", description = "This component describes the Payouts API")
 @RequiredArgsConstructor
 public class PayoutController {
 

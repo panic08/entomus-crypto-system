@@ -52,7 +52,5 @@ public class CryptoCurrency {
         getUsd().setUsdt(getCryptosPrice.getUsdt().getUsd());
         getUsd().setUsdc(getCryptosPrice.getUsdc().getUsd());
         getUsd().setDai(getCryptosPrice.getDai().getUsd());
-
-        System.out.println(getUsd().getBtc());
     }
 }
