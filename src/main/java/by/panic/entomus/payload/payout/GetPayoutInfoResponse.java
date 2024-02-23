@@ -8,7 +8,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Builder
-public class CreatePayoutResponse {
+public class GetPayoutInfoResponse {
     private int state;
     private PayoutDto result;
 }

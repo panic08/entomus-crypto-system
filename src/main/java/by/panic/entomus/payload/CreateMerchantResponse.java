@@ -11,6 +11,15 @@ import lombok.Setter;
 @Builder
 @Schema(name = "CreateMerchantResponse")
 public class CreateMerchantResponse {
-    @JsonProperty(value = "api_key")
-    private String apiKey;
+    private int state;
+    private Result result;
+
+    @Getter
+    @Setter
+    @Builder
+    @Schema(name = "CreateMerchantResponseResult")
+    public static class Result {
+        @JsonProperty(value = "api_key")
+        private String apiKey;
+    }
 }

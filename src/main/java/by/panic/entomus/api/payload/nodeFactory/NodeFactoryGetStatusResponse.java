@@ -1,8 +1,8 @@
 package by.panic.entomus.api.payload.nodeFactory;
 
 import by.panic.entomus.api.payload.nodeFactory.enums.NodeFactoryGetStatusStatus;
-import by.panic.entomus.enums.CryptoNetwork;
-import by.panic.entomus.enums.CryptoToken;
+import by.panic.entomus.entity.enums.CryptoNetwork;
+import by.panic.entomus.entity.enums.CryptoToken;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;

@@ -1,9 +1,9 @@
 package by.panic.entomus.entity;
 
-import by.panic.entomus.enums.CryptoNetwork;
-import by.panic.entomus.enums.CryptoToken;
-import by.panic.entomus.enums.InvoicePaymentCurrency;
-import by.panic.entomus.enums.InvoiceStatus;
+import by.panic.entomus.entity.enums.CryptoNetwork;
+import by.panic.entomus.entity.enums.CryptoToken;
+import by.panic.entomus.entity.enums.InvoicePaymentCurrency;
+import by.panic.entomus.entity.enums.InvoiceStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

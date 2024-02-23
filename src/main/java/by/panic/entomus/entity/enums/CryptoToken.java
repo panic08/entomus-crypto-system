@@ -1,4 +1,4 @@
-package by.panic.entomus.enums;
+package by.panic.entomus.entity.enums;
 
 public enum CryptoToken {
     ETH,

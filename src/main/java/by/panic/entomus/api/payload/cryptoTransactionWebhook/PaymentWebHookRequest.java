@@ -1,10 +1,11 @@
-package by.panic.entomus.api.payload.webhook;
+package by.panic.entomus.api.payload.cryptoTransactionWebhook;
 
-import by.panic.entomus.api.payload.webhook.enums.WebHookType;
-import by.panic.entomus.enums.CryptoNetwork;
-import by.panic.entomus.enums.CryptoToken;
-import by.panic.entomus.enums.InvoicePaymentCurrency;
-import by.panic.entomus.enums.InvoiceStatus;
+import by.panic.entomus.api.payload.cryptoTransactionWebhook.enums.WebHookType;
+import by.panic.entomus.entity.enums.CryptoNetwork;
+import by.panic.entomus.entity.enums.CryptoToken;
+import by.panic.entomus.entity.enums.InvoicePaymentCurrency;
+import by.panic.entomus.entity.enums.InvoiceStatus;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import lombok.Builder;
@@ -15,7 +16,8 @@ import lombok.Setter;
 @Setter
 @Builder
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-public class WebHookRequest {
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class PaymentWebHookRequest {
     private WebHookType type;
     private InvoiceStatus status;
     private String uuid;

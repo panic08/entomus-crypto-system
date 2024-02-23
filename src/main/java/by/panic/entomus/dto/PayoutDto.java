@@ -2,8 +2,7 @@ package by.panic.entomus.dto;
 
 import by.panic.entomus.entity.enums.CryptoNetwork;
 import by.panic.entomus.entity.enums.CryptoToken;
-import by.panic.entomus.entity.enums.InvoicePaymentCurrency;
-import by.panic.entomus.entity.enums.InvoiceStatus;
+import by.panic.entomus.entity.enums.PayoutStatus;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
@@ -14,25 +13,15 @@ import lombok.Setter;
 @Getter
 @Setter
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-@Schema(name = "Invoice")
-public class InvoiceDto {
-    private InvoiceStatus status;
+@Schema(name = "Payout")
+public class PayoutDto {
+    private PayoutStatus status;
 
     private String uuid;
 
     private String orderId;
 
-    private double amount;
-
-    private double payerAmount;
-
-    private double discount;
-
-    private int discountPercent;
-
-    private InvoicePaymentCurrency currency;
-
-    private String merchantAmount;
+    private String amount;
 
     private CryptoNetwork network;
 
@@ -42,18 +31,12 @@ public class InvoiceDto {
 
     private String txId;
 
-    private String additionalData;
-
-    private String urlReturn;
-
-    private String urlSuccess;
+    private String balance;
 
     @JsonProperty("is_final")
     private boolean isFinal;
 
-    private long expiredAt;
+    private String urlCallback;
 
-    private Long updatedAt;
-
-    private long createdAt;
+    private Long createdAt;
 }

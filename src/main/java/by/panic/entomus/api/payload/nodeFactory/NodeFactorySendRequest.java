@@ -1,16 +1,18 @@
 package by.panic.entomus.api.payload.nodeFactory;
 
-import by.panic.entomus.enums.CryptoNetwork;
-import by.panic.entomus.enums.CryptoToken;
+import by.panic.entomus.entity.enums.CryptoNetwork;
+import by.panic.entomus.entity.enums.CryptoToken;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.math.BigInteger;
+
 @Getter
 @Setter
 @Builder
-public class NodeFactorySendTokenRequest {
+public class NodeFactorySendRequest {
     @JsonProperty("Address")
     private String address;
 
@@ -21,5 +23,5 @@ public class NodeFactorySendTokenRequest {
     private CryptoToken token;
 
     @JsonProperty("Amount")
-    private long amount;
+    private BigInteger amount;
 }

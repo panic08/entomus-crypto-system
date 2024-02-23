@@ -1,10 +1,8 @@
 package by.panic.entomus.payload.payment;
 
-import by.panic.entomus.enums.CryptoNetwork;
-import by.panic.entomus.enums.CryptoToken;
-import by.panic.entomus.enums.InvoicePaymentCurrency;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import by.panic.entomus.entity.enums.CryptoNetwork;
+import by.panic.entomus.entity.enums.CryptoToken;
+import by.panic.entomus.entity.enums.InvoicePaymentCurrency;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import jakarta.validation.constraints.*;

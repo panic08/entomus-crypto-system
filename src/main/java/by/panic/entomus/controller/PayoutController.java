@@ -3,6 +3,7 @@ package by.panic.entomus.controller;
 import by.panic.entomus.payload.payout.CreatePayoutResponse;
 import by.panic.entomus.payload.payout.CreatePayoutRequest;
 import by.panic.entomus.payload.ExceptionHandler;
+import by.panic.entomus.payload.payout.GetPayoutInfoResponse;
 import by.panic.entomus.service.implement.PayoutServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -13,6 +14,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -29,14 +31,21 @@ public class PayoutController {
             required = true,
             content = @Content(schema = @Schema(implementation = String.class)))
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "You have successfully created a payout",
+            @ApiResponse(responseCode = "200", description = "You have successfully created an Payout and received a \"CreatePayoutResponse\"",
                     content = {@Content(mediaType = "application/json", schema = @Schema(implementation = CreatePayoutResponse.class))}),
             @ApiResponse(responseCode = "400", description = "Incorrect X-API-KEY",
                     content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionHandler.class))})
     })
     @PostMapping
     public CreatePayoutResponse create(@RequestHeader(name = "X-API-KEY") String apiKey,
-                                       @RequestBody CreatePayoutRequest createPayoutRequest) {
+                                       @Validated @RequestBody CreatePayoutRequest createPayoutRequest) {
         return payoutService.create(apiKey, createPayoutRequest);
+    }
+
+    @GetMapping("/info")
+    public GetPayoutInfoResponse getInfo(@RequestHeader(name = "X-API-KEY") String apiKey,
+                                         @RequestParam(name = "uuid", required = false) String uuid,
+                                         @RequestParam(name = "order_id", required = false) String orderId) {
+        return payoutService.getInfo(apiKey, uuid, orderId);
     }
 }

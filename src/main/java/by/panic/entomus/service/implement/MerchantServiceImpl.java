@@ -2,9 +2,9 @@ package by.panic.entomus.service.implement;
 
 import by.panic.entomus.entity.Merchant;
 import by.panic.entomus.entity.Wallet;
-import by.panic.entomus.enums.CryptoNetwork;
-import by.panic.entomus.enums.CryptoToken;
-import by.panic.entomus.enums.WalletType;
+import by.panic.entomus.entity.enums.CryptoNetwork;
+import by.panic.entomus.entity.enums.CryptoToken;
+import by.panic.entomus.entity.enums.WalletType;
 import by.panic.entomus.payload.CreateMerchantResponse;
 import by.panic.entomus.repository.MerchantRepository;
 import by.panic.entomus.repository.WalletRepository;
@@ -240,7 +240,12 @@ public class MerchantServiceImpl implements MerchantService {
 
         log.info("Created new Merchant in {}", MerchantServiceImpl.class);
 
-        return CreateMerchantResponse.builder().apiKey(merchant.getApiKey()).build();
+        return CreateMerchantResponse.builder()
+                .state(0)
+                .result(CreateMerchantResponse.Result.builder()
+                        .apiKey(merchant.getApiKey())
+                        .build())
+                .build();
     }
 
     private String existsOnApiKey(String apiKey) {
