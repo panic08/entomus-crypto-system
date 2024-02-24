@@ -7,7 +7,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Builder
-public class TestWebHookResponse {
+public class ResendPaymentInvoiceWebHookResponse {
     private int state;
     private Object[] result;
 }

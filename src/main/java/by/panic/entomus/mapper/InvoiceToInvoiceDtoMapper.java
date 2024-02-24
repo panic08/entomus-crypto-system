@@ -19,6 +19,7 @@ public interface InvoiceToInvoiceDtoMapper {
             @Mapping(target = "discountPercent", source = "discountPercent"),
             @Mapping(target = "currency", source = "currency"),
             @Mapping(target = "merchantAmount", source = "merchantAmount"),
+            @Mapping(target = "paymentAmount", source = "paymentAmount"),
             @Mapping(target = "network", source = "network"),
             @Mapping(target = "token", source = "token"),
             @Mapping(target = "address", source = "address"),

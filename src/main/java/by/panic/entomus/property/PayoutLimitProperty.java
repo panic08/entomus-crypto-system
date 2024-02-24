@@ -11,41 +11,30 @@ import org.springframework.stereotype.Component;
 @Setter
 public class PayoutLimitProperty {
     private String minEth;
-    private String maxEth;
+    private String minEthUsdt;
+    private String minEthUsdc;
+    private String minEthDai;
 
     private String minBtc;
-    private String maxBtc;
 
     private String minTrx;
-    private String maxTrx;
+    private String minTrxUsdt;
+    private String minTrxUsdc;
 
     private String minBnb;
-    private String maxBnb;
+    private String minBnbUsdt;
+    private String minBnbUsdc;
+    private String minBnbDai;
 
-    private String minMatic;
-    private String maxMatic;
+    private String minPolygon;
 
     private String minEtc;
-    private String maxEtc;
 
     private String minAvax;
-    private String maxAvax;
 
     private String minBch;
-    private String maxBch;
 
     private String minSol;
-    private String maxSol;
 
     private String minLtc;
-    private String maxLtc;
-
-    private String minUsdt;
-    private String maxUsdt;
-
-    private String minUsdc;
-    private String maxUsdc;
-
-    private String minDai;
-    private String maxDai;
 }

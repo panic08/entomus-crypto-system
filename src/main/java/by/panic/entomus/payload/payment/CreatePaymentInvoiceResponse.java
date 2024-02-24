@@ -8,7 +8,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Builder
-public class CreatePaymentResponse {
+public class CreatePaymentInvoiceResponse {
     private int state;
     private InvoiceDto result;
 }

@@ -42,6 +42,9 @@ public class Invoice {
     @Column(name = "payer_amount", nullable = false)
     private Double payerAmount;
 
+    @Column(name = "payment_amount", nullable = false)
+    private String paymentAmount;
+
     @Column(name = "currency", nullable = false)
     @Enumerated(value = EnumType.STRING)
     private InvoicePaymentCurrency currency;

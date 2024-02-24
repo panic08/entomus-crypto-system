@@ -1,6 +1,7 @@
-package by.panic.entomus.payload.payment;
+package by.panic.entomus.payload.merchant;
 
-import by.panic.entomus.dto.InvoiceDto;
+import by.panic.entomus.dto.WalletDto;
+import by.panic.entomus.entity.Wallet;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;
@@ -11,15 +12,15 @@ import java.util.List;
 @Getter
 @Setter
 @Builder
-public class GetPaymentHistoryResponse {
+public class GetMerchantBalanceResponse {
     private int state;
     private Result result;
 
     @Getter
     @Setter
     @Builder
-    @Schema(name = "GetPaymentHistoryResponseResult")
+    @Schema(name = "GetMerchantBalanceResponseResult")
     public static class Result {
-        private List<InvoiceDto> items;
+        private List<WalletDto> balance;
     }
 }

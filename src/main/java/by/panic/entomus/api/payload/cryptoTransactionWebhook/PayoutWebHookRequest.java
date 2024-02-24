@@ -1,11 +1,10 @@
 package by.panic.entomus.api.payload.cryptoTransactionWebhook;
 
-import by.panic.entomus.api.payload.cryptoTransactionWebhook.enums.CryptoTransactionWebHookType;
 import by.panic.entomus.entity.enums.CryptoNetwork;
 import by.panic.entomus.entity.enums.CryptoToken;
-import by.panic.entomus.entity.enums.InvoicePaymentCurrency;
-import by.panic.entomus.entity.enums.InvoiceStatus;
+import by.panic.entomus.entity.enums.PayoutStatus;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import lombok.Builder;
@@ -17,20 +16,18 @@ import lombok.Setter;
 @Builder
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class PaymentWebHookRequest {
-    private CryptoTransactionWebHookType type;
-    private InvoiceStatus status;
+public class PayoutWebHookRequest {
     private String uuid;
     private String orderId;
-    private double amount;
-    private double payerAmount;
-    private String paymentAmount;
-    private InvoicePaymentCurrency currency;
+    private String amount;
     private String merchantAmount;
+
+    @JsonProperty("is_final")
+    private boolean isFinal;
+
+    private PayoutStatus status;
+    private String txId;
     private CryptoNetwork network;
     private CryptoToken token;
-    private String additionalData;
-    private String txId;
-    private boolean isFinal;
     private String sign;
 }

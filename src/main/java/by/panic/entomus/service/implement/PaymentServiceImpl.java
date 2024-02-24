@@ -7,7 +7,7 @@ import by.panic.entomus.api.payload.nodeFactory.NodeFactoryReceiveRequest;
 import by.panic.entomus.api.payload.nodeFactory.NodeFactoryReceiveResponse;
 import by.panic.entomus.api.payload.nodeFactory.enums.NodeFactoryGetStatusStatus;
 import by.panic.entomus.api.payload.cryptoTransactionWebhook.PaymentWebHookRequest;
-import by.panic.entomus.api.payload.cryptoTransactionWebhook.enums.WebHookType;
+import by.panic.entomus.api.payload.cryptoTransactionWebhook.enums.CryptoTransactionWebHookType;
 import by.panic.entomus.entity.Invoice;
 import by.panic.entomus.entity.Merchant;
 import by.panic.entomus.entity.Wallet;
@@ -21,7 +21,6 @@ import by.panic.entomus.repository.InvoiceRepository;
 import by.panic.entomus.repository.MerchantRepository;
 import by.panic.entomus.repository.WalletRepository;
 import by.panic.entomus.scheduler.CryptoCurrency;
-import by.panic.entomus.security.MerchantSecurity;
 import by.panic.entomus.service.PaymentService;
 import by.panic.entomus.util.QrUtil;
 import by.panic.entomus.util.RounderUtil;
@@ -47,7 +46,6 @@ import java.util.concurrent.ExecutorService;
 @RequiredArgsConstructor
 @Slf4j
 public class PaymentServiceImpl implements PaymentService {
-    private final MerchantSecurity merchantSecurity;
     private final MerchantRepository merchantRepository;
     private final InvoiceRepository invoiceRepository;
     private final WalletRepository walletRepository;
@@ -64,10 +62,8 @@ public class PaymentServiceImpl implements PaymentService {
     private Double paymentFee;
 
     @Override
-    public ResponseEntity<byte[]> createQr(String apiKey, String invoiceUUID) {
-        merchantSecurity.checkOnCorrectMerchant(apiKey);
-
-        String address = invoiceRepository.findAddressByUuid(invoiceUUID);
+    public ResponseEntity<byte[]> createInvoiceQr(String apiKey, String uuid) {
+        String address = invoiceRepository.findAddressByUuid(uuid);
 
         if (address == null) {
             return ResponseEntity.notFound().build();
@@ -76,7 +72,7 @@ public class PaymentServiceImpl implements PaymentService {
         byte[] generatedAddress = null;
 
         try {
-            generatedAddress = qrUtil.generateQRCode(address, 256, 256);
+            generatedAddress = qrUtil.generateTextQRCode(address, 256, 256);
         } catch (WriterException | IOException e) {
             log.warn(e.getMessage());
             generatedAddress = null;
@@ -89,49 +85,47 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Transactional
     @Override
-    public CreatePaymentResponse create(String apiKey, CreatePaymentRequest createPaymentRequest) {
-        merchantSecurity.checkOnCorrectMerchant(apiKey);
-
-        if (invoiceRepository.existsByOrderId(createPaymentRequest.getOrderId())) {
+    public CreatePaymentInvoiceResponse createInvoice(String apiKey, CreatePaymentInvoiceRequest createPaymentInvoiceRequest) {
+        if (invoiceRepository.existsByOrderId(createPaymentInvoiceRequest.getOrderId())) {
             throw new PaymentException("Payment with this order_id already exists");
         }
 
-        switch (createPaymentRequest.getNetwork()) {
+        switch (createPaymentInvoiceRequest.getNetwork()) {
             case ETH -> {
-                switch (createPaymentRequest.getCurrency()) {
+                switch (createPaymentInvoiceRequest.getCurrency()) {
                     case USD -> {
-                        if (createPaymentRequest.getAmount() < 15 || createPaymentRequest.getAmount() > 100_000) {
-                            throw new PaymentException("Minimum 15 USD and maximum 100.000 USD for this network for create payment");
+                        if (createPaymentInvoiceRequest.getAmount() < 15) {
+                            throw new PaymentException("Minimum 15 USD for this network for create payment");
                         }
                     }
                 }
             }
 
             case ETC, LTC, AVAX, BCH, SOL, TRX, POLYGON -> {
-                switch (createPaymentRequest.getCurrency()) {
+                switch (createPaymentInvoiceRequest.getCurrency()) {
                     case USD -> {
-                        if (createPaymentRequest.getAmount() < 0.3 || createPaymentRequest.getAmount() > 100_000) {
-                            throw new PaymentException("Minimum 0.3 USD and maximum 100.000 USD for this network for create payment");
+                        if (createPaymentInvoiceRequest.getAmount() < 1.1) {
+                            throw new PaymentException("Minimum 1.1 USD for this network for create payment");
                         }
                     }
                 }
             }
 
             case BTC -> {
-                switch (createPaymentRequest.getCurrency()) {
+                switch (createPaymentInvoiceRequest.getCurrency()) {
                     case USD -> {
-                        if (createPaymentRequest.getAmount() < 5 || createPaymentRequest.getAmount() > 100_000) {
-                            throw new PaymentException("Minimum 5 USD and maximum 100.000 USD for this network for create payment");
+                        if (createPaymentInvoiceRequest.getAmount() < 10) {
+                            throw new PaymentException("Minimum 10 USD for this network for create payment");
                         }
                     }
                 }
             }
 
             case BNB -> {
-                switch (createPaymentRequest.getCurrency()) {
+                switch (createPaymentInvoiceRequest.getCurrency()) {
                     case USD -> {
-                        if (createPaymentRequest.getAmount() < 1.87 || createPaymentRequest.getAmount() > 100_000) {
-                            throw new PaymentException("Minimum 1.87 USD and maximum 100.000 USD for this network for create payment");
+                        if (createPaymentInvoiceRequest.getAmount() < 5) {
+                            throw new PaymentException("Minimum 5 USD for this network for create payment");
                         }
                     }
                 }
@@ -146,31 +140,31 @@ public class PaymentServiceImpl implements PaymentService {
         Invoice newInvoice = Invoice.builder()
                 .status(InvoiceStatus.PENDING)
                 .uuid(existsOnUuid(UUID.randomUUID().toString()))
-                .orderId(createPaymentRequest.getOrderId())
-                .currency(createPaymentRequest.getCurrency())
-                .network(createPaymentRequest.getNetwork())
-                .token(createPaymentRequest.getToken())
-                .additionalData(createPaymentRequest.getAdditionalData())
-                .urlCallback(createPaymentRequest.getUrlCallback())
-                .urlReturn(createPaymentRequest.getUrlReturn())
-                .urlSuccess(createPaymentRequest.getUrlSuccess())
+                .orderId(createPaymentInvoiceRequest.getOrderId())
+                .currency(createPaymentInvoiceRequest.getCurrency())
+                .network(createPaymentInvoiceRequest.getNetwork())
+                .token(createPaymentInvoiceRequest.getToken())
+                .additionalData(createPaymentInvoiceRequest.getAdditionalData())
+                .urlCallback(createPaymentInvoiceRequest.getUrlCallback())
+                .urlReturn(createPaymentInvoiceRequest.getUrlReturn())
+                .urlSuccess(createPaymentInvoiceRequest.getUrlSuccess())
                 .isFinal(false)
                 .createdAt(invoiceTimestamp)
-                .expiredAt(invoiceTimestamp + (createPaymentRequest.getLifetime() * 1000))
+                .expiredAt(invoiceTimestamp + (createPaymentInvoiceRequest.getLifetime() * 1000))
                 .merchant(invoiceMerchant)
                 .build();
 
-        double newInvoiceAmount = rounderUtil.roundToNDecimalPlaces(createPaymentRequest.getAmount(), 2);
+        double newInvoiceAmount = rounderUtil.roundToNDecimalPlaces(createPaymentInvoiceRequest.getAmount(), 2);
 
         newInvoice.setAmount(newInvoiceAmount);
 
-        if (createPaymentRequest.getDiscountPercent() != null) {
-            double discount = newInvoiceAmount * ((double) createPaymentRequest.getDiscountPercent() / 100);
+        if (createPaymentInvoiceRequest.getDiscountPercent() != null) {
+            double discount = newInvoiceAmount * ((double) createPaymentInvoiceRequest.getDiscountPercent() / 100);
 
             newInvoiceAmount -= discount;
 
             newInvoice.setDiscount(discount);
-            newInvoice.setDiscountPercent(createPaymentRequest.getDiscountPercent());
+            newInvoice.setDiscountPercent(createPaymentInvoiceRequest.getDiscountPercent());
         }
 
         newInvoice.setPayerAmount(newInvoiceAmount + (newInvoiceAmount * paymentFee));
@@ -184,7 +178,7 @@ public class PaymentServiceImpl implements PaymentService {
             case ETH -> {
                 double cryptoForOneDollar = 0d;
 
-                switch (createPaymentRequest.getCurrency()) {
+                switch (createPaymentInvoiceRequest.getCurrency()) {
                     case USD -> cryptoForOneDollar = 1 / cryptoCurrency.getUsd().getEth();
                 }
 
@@ -205,7 +199,7 @@ public class PaymentServiceImpl implements PaymentService {
             case BNB -> {
                 double cryptoForOneDollar = 0d;
 
-                switch (createPaymentRequest.getCurrency()) {
+                switch (createPaymentInvoiceRequest.getCurrency()) {
                     case USD -> cryptoForOneDollar = 1 / cryptoCurrency.getUsd().getBnb();
                 }
 
@@ -226,7 +220,7 @@ public class PaymentServiceImpl implements PaymentService {
             case MATIC -> {
                 double cryptoForOneDollar = 0d;
 
-                switch (createPaymentRequest.getCurrency()) {
+                switch (createPaymentInvoiceRequest.getCurrency()) {
                     case USD -> cryptoForOneDollar = 1 / cryptoCurrency.getUsd().getMatic();
                 }
 
@@ -247,7 +241,7 @@ public class PaymentServiceImpl implements PaymentService {
             case ETC -> {
                 double cryptoForOneDollar = 0d;
 
-                switch (createPaymentRequest.getCurrency()) {
+                switch (createPaymentInvoiceRequest.getCurrency()) {
                     case USD -> cryptoForOneDollar = 1 / cryptoCurrency.getUsd().getEtc();
                 }
 
@@ -268,7 +262,7 @@ public class PaymentServiceImpl implements PaymentService {
             case AVAX -> {
                 double cryptoForOneDollar = 0d;
 
-                switch (createPaymentRequest.getCurrency()) {
+                switch (createPaymentInvoiceRequest.getCurrency()) {
                     case USD -> cryptoForOneDollar = 1 / cryptoCurrency.getUsd().getAvax();
                 }
 
@@ -289,7 +283,7 @@ public class PaymentServiceImpl implements PaymentService {
             case SOL -> {
                 double cryptoForOneDollar = 0d;
 
-                switch (createPaymentRequest.getCurrency()) {
+                switch (createPaymentInvoiceRequest.getCurrency()) {
                     case USD -> cryptoForOneDollar = 1 / cryptoCurrency.getUsd().getSol();
                 }
 
@@ -310,7 +304,7 @@ public class PaymentServiceImpl implements PaymentService {
             case BCH -> {
                 double cryptoForOneDollar = 0d;
 
-                switch (createPaymentRequest.getCurrency()) {
+                switch (createPaymentInvoiceRequest.getCurrency()) {
                     case USD -> cryptoForOneDollar = 1 / cryptoCurrency.getUsd().getBch();
                 }
 
@@ -331,7 +325,7 @@ public class PaymentServiceImpl implements PaymentService {
             case LTC -> {
                 double cryptoForOneDollar = 0d;
 
-                switch (createPaymentRequest.getCurrency()) {
+                switch (createPaymentInvoiceRequest.getCurrency()) {
                     case USD -> cryptoForOneDollar = 1 / cryptoCurrency.getUsd().getLtc();
                 }
 
@@ -353,7 +347,7 @@ public class PaymentServiceImpl implements PaymentService {
             case BTC -> {
                 double cryptoForOneDollar = 0d;
 
-                switch (createPaymentRequest.getCurrency()) {
+                switch (createPaymentInvoiceRequest.getCurrency()) {
                     case USD -> cryptoForOneDollar = 1 / cryptoCurrency.getUsd().getBtc();
                 }
 
@@ -374,7 +368,7 @@ public class PaymentServiceImpl implements PaymentService {
             case TRX -> {
                 double cryptoForOneDollar = 0d;
 
-                switch (createPaymentRequest.getCurrency()) {
+                switch (createPaymentInvoiceRequest.getCurrency()) {
                     case USD -> cryptoForOneDollar = 1 / cryptoCurrency.getUsd().getTrx();
                 }
 
@@ -396,7 +390,7 @@ public class PaymentServiceImpl implements PaymentService {
             case USDT -> {
                 double cryptoForOneDollar = 0d;
 
-                switch (createPaymentRequest.getCurrency()) {
+                switch (createPaymentInvoiceRequest.getCurrency()) {
                     case USD -> cryptoForOneDollar = 1 / cryptoCurrency.getUsd().getUsdt();
                 }
 
@@ -417,7 +411,7 @@ public class PaymentServiceImpl implements PaymentService {
             case USDC -> {
                 double cryptoForOneDollar = 0d;
 
-                switch (createPaymentRequest.getCurrency()) {
+                switch (createPaymentInvoiceRequest.getCurrency()) {
                     case USD -> cryptoForOneDollar = 1 / cryptoCurrency.getUsd().getUsdc();
                 }
 
@@ -438,7 +432,7 @@ public class PaymentServiceImpl implements PaymentService {
             case DAI -> {
                 double cryptoForOneDollar = 0d;
 
-                switch (createPaymentRequest.getCurrency()) {
+                switch (createPaymentInvoiceRequest.getCurrency()) {
                     case USD -> cryptoForOneDollar = 1 / cryptoCurrency.getUsd().getDai();
                 }
 
@@ -456,24 +450,20 @@ public class PaymentServiceImpl implements PaymentService {
                         4);
             }
         }
-
-        newInvoice.setMerchantAmount(existsOnPendingMerchantAmount(newInvoiceMerchantAmountWithComs, newInvoice.getToken()).toString());
+        newInvoice.setMerchantAmount(newInvoiceMerchantAmount.toString());
+//        newInvoice.setMerchantAmount(existsOnPendingMerchantAmount(newInvoiceMerchantAmountWithComs, newInvoice.getToken()).toString());
+        newInvoice.setPaymentAmount(existsOnPendingMerchantAmount(newInvoiceMerchantAmountWithComs, newInvoice.getToken()).toString());
 
         NodeFactoryReceiveResponse nodeFactoryReceiveResponse = nodeFactoryApi.receive(NodeFactoryReceiveRequest.builder()
                         .network(newInvoice.getNetwork())
                         .token(newInvoice.getToken())
-                        .amount(newInvoiceMerchantAmount)
-                        .timeout(createPaymentRequest.getLifetime() / 60)
+                        .amount(new BigInteger(newInvoice.getPaymentAmount()))
+                        .timeout(createPaymentInvoiceRequest.getLifetime() / 60)
                 .build());
 
-        if (nodeFactoryReceiveResponse == null) {
-            throw new PaymentException("You have entered an invalid Network-Token pair");
-        } else {
-            newInvoice.setAddress(nodeFactoryReceiveResponse.getAddress());
-        }
+        newInvoice.setAddress(nodeFactoryReceiveResponse.getAddress());
 
         newInvoice = invoiceRepository.save(newInvoice);
-
 
 
         Invoice finalNewInvoice = newInvoice;
@@ -485,7 +475,7 @@ public class PaymentServiceImpl implements PaymentService {
                 NodeFactoryGetStatusResponse nodeFactoryGetStatusResponse =
                         nodeFactoryApi.getStatus(nodeFactoryReceiveResponse.getId());
 
-                if (nodeFactoryGetStatusResponse.getStatus().equals(NodeFactoryGetStatusStatus.SUCCESS)) {
+                if (!nodeFactoryGetStatusResponse.getStatus().equals(NodeFactoryGetStatusStatus.SUCCESS)) {
                     finalNewInvoice.setStatus(InvoiceStatus.SUCCESS);
                     finalNewInvoice.setTxId(nodeFactoryGetStatusResponse.getHash());
                     finalNewInvoice.setIsFinal(true);
@@ -506,12 +496,13 @@ public class PaymentServiceImpl implements PaymentService {
 
                     if (finalNewInvoice.getUrlCallback() != null) {
                         PaymentWebHookRequest webHookRequest = PaymentWebHookRequest.builder()
-                                .type(WebHookType.PAYMENT)
+                                .type(CryptoTransactionWebHookType.PAYMENT)
                                 .uuid(finalNewInvoice.getUuid())
                                 .status(finalNewInvoice.getStatus())
                                 .orderId(finalNewInvoice.getOrderId())
                                 .amount(finalNewInvoice.getAmount())
-                                .paymentAmount(finalNewInvoice.getPayerAmount())
+                                .payerAmount(finalNewInvoice.getPayerAmount())
+                                .paymentAmount(finalNewInvoice.getPaymentAmount())
                                 .currency(finalNewInvoice.getCurrency())
                                 .merchantAmount(finalNewInvoice.getMerchantAmount())
                                 .network(finalNewInvoice.getNetwork())
@@ -554,23 +545,21 @@ public class PaymentServiceImpl implements PaymentService {
 
 
 
-        return CreatePaymentResponse.builder()
+        return CreatePaymentInvoiceResponse.builder()
                 .state(0)
                 .result(invoiceToInvoiceDtoMapper.invoiceToInvoiceDto(newInvoice))
                 .build();
     }
 
     @Override
-    public GetPaymentInfoResponse getInfo(String apiKey, String uuid, String orderId) {
-        merchantSecurity.checkOnCorrectMerchant(apiKey);
-
+    public GetPaymentInvoiceInfoResponse getInvoiceInfo(String apiKey, String uuid, String orderId) {
         if (uuid != null) {
-            return GetPaymentInfoResponse.builder()
+            return GetPaymentInvoiceInfoResponse.builder()
                     .state(0)
                     .result(invoiceToInvoiceDtoMapper.invoiceToInvoiceDto(invoiceRepository.findByUuid(uuid)))
                     .build();
         } else if (orderId != null) {
-            return GetPaymentInfoResponse.builder()
+            return GetPaymentInvoiceInfoResponse.builder()
                     .state(0)
                     .result(invoiceToInvoiceDtoMapper.invoiceToInvoiceDto(invoiceRepository.findByOrderId(orderId)))
                     .build();
@@ -580,9 +569,7 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    public GetPaymentHistoryResponse getHistory(String apiKey, Long dateFrom, Long dateTo) {
-        merchantSecurity.checkOnCorrectMerchant(apiKey);
-
+    public GetPaymentInvoiceHistoryResponse getInvoiceHistory(String apiKey, Long dateFrom, Long dateTo) {
         if (dateFrom == null) {
             dateFrom = 0L;
         }
@@ -596,24 +583,22 @@ public class PaymentServiceImpl implements PaymentService {
         List<Invoice> filteredInvoiceList = invoiceRepository.findAllByMerchantDateFilterOrderByCreatedAtAsc(principalMerchant,
                 dateFrom, dateTo);
 
-        return GetPaymentHistoryResponse.builder()
+        return GetPaymentInvoiceHistoryResponse.builder()
                 .state(0)
-                .result(GetPaymentHistoryResponse.Result.builder()
+                .result(GetPaymentInvoiceHistoryResponse.Result.builder()
                         .items(invoiceToInvoiceDtoMapper.invoiceListToInvoiceDtoList(filteredInvoiceList))
                         .build())
                 .build();
     }
 
     @Override
-    public ResendWebHookResponse resendWebHook(String apiKey, ResendWebHookRequest resendWebhookRequest) {
-        merchantSecurity.checkOnCorrectMerchant(apiKey);
-
+    public ResendPaymentInvoiceWebHookResponse resendInvoiceWebHook(String apiKey, ResendPaymentInvoiceWebHookRequest resendPaymentInvoiceWebhookRequest) {
         Invoice invoice;
 
-        if (resendWebhookRequest.getInvoiceUuid() != null) {
-            invoice = invoiceRepository.findByUuid(resendWebhookRequest.getInvoiceUuid());
-        } else if (resendWebhookRequest.getOrderId() != null) {
-           invoice = invoiceRepository.findByOrderId(resendWebhookRequest.getOrderId());
+        if (resendPaymentInvoiceWebhookRequest.getInvoiceUuid() != null) {
+            invoice = invoiceRepository.findByUuid(resendPaymentInvoiceWebhookRequest.getInvoiceUuid());
+        } else if (resendPaymentInvoiceWebhookRequest.getOrderId() != null) {
+           invoice = invoiceRepository.findByOrderId(resendPaymentInvoiceWebhookRequest.getOrderId());
         } else {
             throw new PaymentException("Provide uuid or orderId");
         }
@@ -631,16 +616,17 @@ public class PaymentServiceImpl implements PaymentService {
         }
 
         PaymentWebHookRequest webHookRequest = PaymentWebHookRequest.builder()
-                .type(WebHookType.PAYMENT)
+                .type(CryptoTransactionWebHookType.PAYMENT)
                 .uuid(invoice.getUuid())
                 .status(invoice.getStatus())
                 .orderId(invoice.getOrderId())
                 .amount(invoice.getAmount())
-                .paymentAmount(invoice.getPayerAmount())
+                .paymentAmount(invoice.getPaymentAmount())
+                .payerAmount(invoice.getPayerAmount())
                 .currency(invoice.getCurrency())
                 .merchantAmount(invoice.getMerchantAmount())
                 .network(invoice.getNetwork())
-                .token(invoice.getToken())
+                .token(invoice.getToken())  
                 .additionalData(invoice.getAdditionalData())
                 .txId(invoice.getTxId())
                 .isFinal(invoice.getIsFinal())
@@ -651,208 +637,235 @@ public class PaymentServiceImpl implements PaymentService {
 
         cryptoTransactionWebHookApi.sendPayment(webHookRequest, invoice.getUrlCallback());
 
-        return ResendWebHookResponse.builder()
+        return ResendPaymentInvoiceWebHookResponse.builder()
                 .state(0)
                 .result(new Object[]{})
                 .build();
     }
 
     @Override
-    public TestWebHookResponse testWebHook(String apiKey, TestWebHookRequest testWebHookRequest) {
-        merchantSecurity.checkOnCorrectMerchant(apiKey);
-
-        if (!testWebHookRequest.getStatus().equals(InvoiceStatus.SUCCESS)) {
+    public TestPaymentInvoiceWebHookResponse testInvoiceWebHook(String apiKey, TestPaymentInvoiceWebHookRequest testPaymentInvoiceWebHookRequest) {
+        if (!testPaymentInvoiceWebHookRequest.getStatus().equals(InvoiceStatus.SUCCESS)) {
             throw new PaymentException("Payment has not yet received \"SUCCESS\" status");
         }
 
         PaymentWebHookRequest webHookRequest = PaymentWebHookRequest.builder()
-                .type(WebHookType.PAYMENT)
-                .uuid(testWebHookRequest.getUuid())
-                .status(testWebHookRequest.getStatus())
-                .orderId(testWebHookRequest.getOrderId())
-                .merchantAmount(testWebHookRequest.getMerchantAmount())
-                .network(testWebHookRequest.getNetwork())
-                .token(testWebHookRequest.getToken())
-                .sign(sha256Util.encodeStringToSHA256(testWebHookRequest.getUuid()
-                        + "&" + testWebHookRequest.getOrderId() + "&" + testWebHookRequest.getMerchantAmount()
-                        + "&" + testWebHookRequest.getNetwork()  + "&" + testWebHookRequest.getToken() + "&" + apiKey))
+                .type(CryptoTransactionWebHookType.PAYMENT)
+                .uuid(testPaymentInvoiceWebHookRequest.getUuid())
+                .status(testPaymentInvoiceWebHookRequest.getStatus())
+                .orderId(testPaymentInvoiceWebHookRequest.getOrderId())
+                .merchantAmount(testPaymentInvoiceWebHookRequest.getMerchantAmount())
+                .network(testPaymentInvoiceWebHookRequest.getNetwork())
+                .token(testPaymentInvoiceWebHookRequest.getToken())
+                .sign(sha256Util.encodeStringToSHA256(testPaymentInvoiceWebHookRequest.getUuid()
+                        + "&" + testPaymentInvoiceWebHookRequest.getOrderId() + "&" + testPaymentInvoiceWebHookRequest.getMerchantAmount()
+                        + "&" + testPaymentInvoiceWebHookRequest.getNetwork()  + "&" + testPaymentInvoiceWebHookRequest.getToken() + "&" + apiKey))
                 .build();
 
-        cryptoTransactionWebHookApi.sendPayment(webHookRequest, testWebHookRequest.getUrlCallback());
+        cryptoTransactionWebHookApi.sendPayment(webHookRequest, testPaymentInvoiceWebHookRequest.getUrlCallback());
 
-        return TestWebHookResponse.builder()
+        return TestPaymentInvoiceWebHookResponse.builder()
                 .state(0)
                 .result(new Object[]{})
                 .build();
     }
 
     @Override
-    public GetPaymentServiceResponse getServices(String apiKey) {
-        merchantSecurity.checkOnCorrectMerchant(apiKey);
-
+    public GetPaymentInvoiceServiceResponse getInvoiceServices(String apiKey) {
         double percentPaymentFee = paymentFee * 100;
-        List<GetPaymentServiceResponse.Result> servicesResultList = new ArrayList<>();
+        List<GetPaymentInvoiceServiceResponse.Result> servicesResultList = new ArrayList<>();
 
         //ETH
-        servicesResultList.add(GetPaymentServiceResponse.Result.builder()
+        servicesResultList.add(GetPaymentInvoiceServiceResponse.Result.builder()
                 .network(CryptoNetwork.ETH)
                 .token(CryptoToken.ETH)
                 .isAvailable(true)
-                .commission(GetPaymentServiceResponse.Result.Commission.builder()
+                .commission(GetPaymentInvoiceServiceResponse.Result.Commission.builder()
                         .feeAmount(0)
                         .percent(percentPaymentFee)
                         .build())
                 .build());
 
-        servicesResultList.add(GetPaymentServiceResponse.Result.builder()
+        servicesResultList.add(GetPaymentInvoiceServiceResponse.Result.builder()
                 .network(CryptoNetwork.ETH)
                 .token(CryptoToken.USDT)
                 .isAvailable(true)
-                .commission(GetPaymentServiceResponse.Result.Commission.builder()
+                .commission(GetPaymentInvoiceServiceResponse.Result.Commission.builder()
                         .feeAmount(0)
                         .percent(percentPaymentFee)
                         .build())
                 .build());
 
-        servicesResultList.add(GetPaymentServiceResponse.Result.builder()
+        servicesResultList.add(GetPaymentInvoiceServiceResponse.Result.builder()
                 .network(CryptoNetwork.ETH)
                 .token(CryptoToken.USDC)
                 .isAvailable(true)
-                .commission(GetPaymentServiceResponse.Result.Commission.builder()
+                .commission(GetPaymentInvoiceServiceResponse.Result.Commission.builder()
                         .feeAmount(0)
                         .percent(percentPaymentFee)
                         .build())
                 .build());
 
-        servicesResultList.add(GetPaymentServiceResponse.Result.builder()
+        servicesResultList.add(GetPaymentInvoiceServiceResponse.Result.builder()
                 .network(CryptoNetwork.ETH)
                 .token(CryptoToken.DAI)
                 .isAvailable(true)
-                .commission(GetPaymentServiceResponse.Result.Commission.builder()
+                .commission(GetPaymentInvoiceServiceResponse.Result.Commission.builder()
                         .feeAmount(0)
                         .percent(percentPaymentFee)
                         .build())
                 .build());
 
         //BTC
-        servicesResultList.add(GetPaymentServiceResponse.Result.builder()
+        servicesResultList.add(GetPaymentInvoiceServiceResponse.Result.builder()
                 .network(CryptoNetwork.BTC)
                 .token(CryptoToken.BTC)
                 .isAvailable(true)
-                .commission(GetPaymentServiceResponse.Result.Commission.builder()
+                .commission(GetPaymentInvoiceServiceResponse.Result.Commission.builder()
+                        .feeAmount(0)
+                        .percent(percentPaymentFee)
+                        .build())
+                .build());
+
+        //TRX
+        servicesResultList.add(GetPaymentInvoiceServiceResponse.Result.builder()
+                .network(CryptoNetwork.TRX)
+                .token(CryptoToken.TRX)
+                .isAvailable(true)
+                .commission(GetPaymentInvoiceServiceResponse.Result.Commission.builder()
+                        .feeAmount(0)
+                        .percent(percentPaymentFee)
+                        .build())
+                .build());
+
+        servicesResultList.add(GetPaymentInvoiceServiceResponse.Result.builder()
+                .network(CryptoNetwork.TRX)
+                .token(CryptoToken.USDT)
+                .isAvailable(true)
+                .commission(GetPaymentInvoiceServiceResponse.Result.Commission.builder()
+                        .feeAmount(0)
+                        .percent(percentPaymentFee)
+                        .build())
+                .build());
+
+        servicesResultList.add(GetPaymentInvoiceServiceResponse.Result.builder()
+                .network(CryptoNetwork.TRX)
+                .token(CryptoToken.USDC)
+                .isAvailable(true)
+                .commission(GetPaymentInvoiceServiceResponse.Result.Commission.builder()
                         .feeAmount(0)
                         .percent(percentPaymentFee)
                         .build())
                 .build());
 
         //BNB
-        servicesResultList.add(GetPaymentServiceResponse.Result.builder()
+        servicesResultList.add(GetPaymentInvoiceServiceResponse.Result.builder()
                 .network(CryptoNetwork.BNB)
                 .token(CryptoToken.BNB)
                 .isAvailable(true)
-                .commission(GetPaymentServiceResponse.Result.Commission.builder()
+                .commission(GetPaymentInvoiceServiceResponse.Result.Commission.builder()
                         .feeAmount(0)
                         .percent(percentPaymentFee)
                         .build())
                 .build());
 
-        servicesResultList.add(GetPaymentServiceResponse.Result.builder()
+        servicesResultList.add(GetPaymentInvoiceServiceResponse.Result.builder()
                 .network(CryptoNetwork.BNB)
                 .token(CryptoToken.USDT)
                 .isAvailable(true)
-                .commission(GetPaymentServiceResponse.Result.Commission.builder()
+                .commission(GetPaymentInvoiceServiceResponse.Result.Commission.builder()
                         .feeAmount(0)
                         .percent(percentPaymentFee)
                         .build())
                 .build());
 
-        servicesResultList.add(GetPaymentServiceResponse.Result.builder()
+        servicesResultList.add(GetPaymentInvoiceServiceResponse.Result.builder()
                 .network(CryptoNetwork.BNB)
                 .token(CryptoToken.USDC)
                 .isAvailable(true)
-                .commission(GetPaymentServiceResponse.Result.Commission.builder()
+                .commission(GetPaymentInvoiceServiceResponse.Result.Commission.builder()
                         .feeAmount(0)
                         .percent(percentPaymentFee)
                         .build())
                 .build());
 
-        servicesResultList.add(GetPaymentServiceResponse.Result.builder()
+        servicesResultList.add(GetPaymentInvoiceServiceResponse.Result.builder()
                 .network(CryptoNetwork.BNB)
                 .token(CryptoToken.DAI)
                 .isAvailable(true)
-                .commission(GetPaymentServiceResponse.Result.Commission.builder()
+                .commission(GetPaymentInvoiceServiceResponse.Result.Commission.builder()
                         .feeAmount(0)
                         .percent(percentPaymentFee)
                         .build())
                 .build());
 
         //MATIC
-        servicesResultList.add(GetPaymentServiceResponse.Result.builder()
+        servicesResultList.add(GetPaymentInvoiceServiceResponse.Result.builder()
                 .network(CryptoNetwork.POLYGON)
                 .token(CryptoToken.MATIC)
                 .isAvailable(true)
-                .commission(GetPaymentServiceResponse.Result.Commission.builder()
+                .commission(GetPaymentInvoiceServiceResponse.Result.Commission.builder()
                         .feeAmount(0)
                         .percent(percentPaymentFee)
                         .build())
                 .build());
 
         //ETC
-        servicesResultList.add(GetPaymentServiceResponse.Result.builder()
+        servicesResultList.add(GetPaymentInvoiceServiceResponse.Result.builder()
                 .network(CryptoNetwork.ETC)
                 .token(CryptoToken.ETC)
                 .isAvailable(true)
-                .commission(GetPaymentServiceResponse.Result.Commission.builder()
+                .commission(GetPaymentInvoiceServiceResponse.Result.Commission.builder()
                         .feeAmount(0)
                         .percent(percentPaymentFee)
                         .build())
                 .build());
 
         //AVAX
-        servicesResultList.add(GetPaymentServiceResponse.Result.builder()
+        servicesResultList.add(GetPaymentInvoiceServiceResponse.Result.builder()
                 .network(CryptoNetwork.AVAX)
                 .token(CryptoToken.AVAX)
                 .isAvailable(true)
-                .commission(GetPaymentServiceResponse.Result.Commission.builder()
+                .commission(GetPaymentInvoiceServiceResponse.Result.Commission.builder()
                         .feeAmount(0)
                         .percent(percentPaymentFee)
                         .build())
                 .build());
 
         //BCH
-        servicesResultList.add(GetPaymentServiceResponse.Result.builder()
+        servicesResultList.add(GetPaymentInvoiceServiceResponse.Result.builder()
                 .network(CryptoNetwork.BCH)
                 .token(CryptoToken.BCH)
                 .isAvailable(true)
-                .commission(GetPaymentServiceResponse.Result.Commission.builder()
+                .commission(GetPaymentInvoiceServiceResponse.Result.Commission.builder()
                         .feeAmount(0)
                         .percent(percentPaymentFee)
                         .build())
                 .build());
 
         //SOL
-        servicesResultList.add(GetPaymentServiceResponse.Result.builder()
+        servicesResultList.add(GetPaymentInvoiceServiceResponse.Result.builder()
                 .network(CryptoNetwork.SOL)
                 .token(CryptoToken.SOL)
                 .isAvailable(true)
-                .commission(GetPaymentServiceResponse.Result.Commission.builder()
+                .commission(GetPaymentInvoiceServiceResponse.Result.Commission.builder()
                         .feeAmount(0)
                         .percent(percentPaymentFee)
                         .build())
                 .build());
 
         //LTC
-        servicesResultList.add(GetPaymentServiceResponse.Result.builder()
+        servicesResultList.add(GetPaymentInvoiceServiceResponse.Result.builder()
                 .network(CryptoNetwork.LTC)
                 .token(CryptoToken.LTC)
                 .isAvailable(true)
-                .commission(GetPaymentServiceResponse.Result.Commission.builder()
+                .commission(GetPaymentInvoiceServiceResponse.Result.Commission.builder()
                         .feeAmount(0)
                         .percent(percentPaymentFee)
                         .build())
                 .build());
 
-        return GetPaymentServiceResponse.builder()
+        return GetPaymentInvoiceServiceResponse.builder()
                 .state(0)
                 .result(servicesResultList)
                 .build();

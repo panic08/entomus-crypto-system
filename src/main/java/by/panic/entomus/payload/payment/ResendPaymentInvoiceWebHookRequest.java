@@ -8,7 +8,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-public class ResendWebHookRequest {
+public class ResendPaymentInvoiceWebHookRequest {
     private String invoiceUuid;
     private String orderId;
 }

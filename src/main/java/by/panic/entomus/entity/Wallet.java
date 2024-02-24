@@ -34,10 +34,7 @@ public class Wallet {
     @Enumerated(value = EnumType.STRING)
     private CryptoToken token;
 
-    @Column(name = "address", nullable = true)
-    private String address;
-
-    @Column(name = "balance", nullable = true)
+    @Column(name = "balance", nullable = false)
     private String balance;
 
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)

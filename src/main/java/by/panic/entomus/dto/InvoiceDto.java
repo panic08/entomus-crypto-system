@@ -24,6 +24,8 @@ public class InvoiceDto {
 
     private double amount;
 
+    private String paymentAmount;
+
     private double payerAmount;
 
     private double discount;

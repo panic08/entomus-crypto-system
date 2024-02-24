@@ -5,7 +5,9 @@ import by.panic.entomus.entity.Wallet;
 import by.panic.entomus.entity.enums.CryptoNetwork;
 import by.panic.entomus.entity.enums.CryptoToken;
 import by.panic.entomus.entity.enums.WalletType;
+import by.panic.entomus.mapper.WalletToWalletDtoMapperImpl;
 import by.panic.entomus.payload.CreateMerchantResponse;
+import by.panic.entomus.payload.merchant.GetMerchantBalanceResponse;
 import by.panic.entomus.repository.MerchantRepository;
 import by.panic.entomus.repository.WalletRepository;
 import by.panic.entomus.service.MerchantService;
@@ -24,6 +26,7 @@ import java.util.UUID;
 public class MerchantServiceImpl implements MerchantService {
     private final MerchantRepository merchantRepository;
     private final WalletRepository walletRepository;
+    private final WalletToWalletDtoMapperImpl walletToWalletDtoMapper;
 
     @Transactional
     @Override
@@ -244,6 +247,17 @@ public class MerchantServiceImpl implements MerchantService {
                 .state(0)
                 .result(CreateMerchantResponse.Result.builder()
                         .apiKey(merchant.getApiKey())
+                        .build())
+                .build();
+    }
+
+    @Override
+    public GetMerchantBalanceResponse getBalance(String apiKey) {
+        return GetMerchantBalanceResponse.builder()
+                .state(0)
+                .result(GetMerchantBalanceResponse.Result.builder()
+                        .balance(walletToWalletDtoMapper
+                                .walletListToWalletDtoList(merchantRepository.findByApiKey(apiKey).getWallets()))
                         .build())
                 .build();
     }

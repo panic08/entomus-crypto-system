@@ -1,6 +1,6 @@
 package by.panic.entomus.api.payload.cryptoTransactionWebhook.enums;
 
-public enum WebHookType {
+public enum CryptoTransactionWebHookType {
     WALLET,
     PAYMENT
 }

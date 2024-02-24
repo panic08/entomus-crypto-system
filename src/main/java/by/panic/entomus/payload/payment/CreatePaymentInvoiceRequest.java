@@ -12,7 +12,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-public class CreatePaymentRequest {
+public class CreatePaymentInvoiceRequest {
     @NotNull(message = "Amount not may be null")
     private Double amount;
 
@@ -44,8 +44,8 @@ public class CreatePaymentRequest {
     @Max(value = 10800, message = "Lifetime can contain a number between 300 and 10800")
     private Integer lifetime;
 
-    @Min(value = -9, message = "Discount_percent can contain a number between -99 and 100")
-    @Max(value = 100, message = "Discount_percent can contain a number between -99 and 100")
+    @Min(value = -99, message = "Discount_percent can contain a number between -99 and 95")
+    @Max(value = 95, message = "Discount_percent can contain a number between -99 and 95")
     private Integer discountPercent;
 
     @Size(max = 255, message = "Additional_data must contain from 0 to 255 characters")

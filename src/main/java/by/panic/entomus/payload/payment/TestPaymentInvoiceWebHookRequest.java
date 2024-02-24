@@ -14,7 +14,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-public class TestWebHookRequest {
+public class TestPaymentInvoiceWebHookRequest {
         @NotNull(message = "Status not may be null")
     private InvoiceStatus status;
 

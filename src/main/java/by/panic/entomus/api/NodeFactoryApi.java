@@ -23,16 +23,27 @@ public class NodeFactoryApi {
     private String URL;
 
     public NodeFactoryReceiveResponse receive(NodeFactoryReceiveRequest nodeFactoryReceiveRequest) {
-        ResponseEntity<NodeFactoryReceiveResponse> nodeFactoryReceiveRequestResponseEntity = null;
+        ResponseEntity<String> nodeFactoryReceiveRequestResponseEntity = null;
 
-        try {
-            nodeFactoryReceiveRequestResponseEntity = restTemplate.postForEntity(URL + "/api/receive", nodeFactoryReceiveRequest,
-                    NodeFactoryReceiveResponse.class);
-        } catch (UnknownContentTypeException ignored) {
-            return null;
+        nodeFactoryReceiveRequestResponseEntity = restTemplate.postForEntity(URL + "/api/receive", nodeFactoryReceiveRequest,
+                String.class);
+
+        if (nodeFactoryReceiveRequestResponseEntity.equals("failed to create new transactor: transactor not found")) {
+            throw new NodeFactoryException("You have entered an invalid Network-Token pair");
         }
 
-        return nodeFactoryReceiveRequestResponseEntity.getBody();
+        NodeFactoryReceiveResponse nodeFactoryReceiveResponse = null;
+
+        try {
+            nodeFactoryReceiveResponse = objectMapper.readValue(nodeFactoryReceiveRequestResponseEntity.getBody(),
+                    NodeFactoryReceiveResponse.class);
+        } catch (Exception e) {
+            log.warn(e.getMessage());
+
+            throw new NodeFactoryException("NodeFactory service system error");
+        }
+
+        return nodeFactoryReceiveResponse;
     }
 
     public NodeFactoryGetStatusResponse getStatus(long receiveRequestId) {
