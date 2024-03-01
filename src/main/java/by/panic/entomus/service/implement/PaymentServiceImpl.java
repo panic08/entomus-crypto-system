@@ -10,15 +10,18 @@ import by.panic.entomus.api.payload.cryptoTransactionWebhook.PaymentWebHookReque
 import by.panic.entomus.api.payload.cryptoTransactionWebhook.enums.CryptoTransactionWebHookType;
 import by.panic.entomus.entity.Invoice;
 import by.panic.entomus.entity.Merchant;
+import by.panic.entomus.entity.StaticWallet;
 import by.panic.entomus.entity.Wallet;
 import by.panic.entomus.entity.enums.CryptoNetwork;
 import by.panic.entomus.entity.enums.CryptoToken;
 import by.panic.entomus.entity.enums.InvoiceStatus;
+import by.panic.entomus.entity.enums.StaticWalletStatus;
 import by.panic.entomus.exception.PaymentException;
 import by.panic.entomus.mapper.InvoiceToInvoiceDtoMapperImpl;
 import by.panic.entomus.payload.payment.*;
 import by.panic.entomus.repository.InvoiceRepository;
 import by.panic.entomus.repository.MerchantRepository;
+import by.panic.entomus.repository.StaticWalletRepository;
 import by.panic.entomus.repository.WalletRepository;
 import by.panic.entomus.scheduler.CryptoCurrency;
 import by.panic.entomus.service.PaymentService;
@@ -49,11 +52,12 @@ public class PaymentServiceImpl implements PaymentService {
     private final MerchantRepository merchantRepository;
     private final InvoiceRepository invoiceRepository;
     private final WalletRepository walletRepository;
-    private final InvoiceToInvoiceDtoMapperImpl invoiceToInvoiceDtoMapper;
-    private final ExecutorService executorService;
+    private final StaticWalletRepository staticWalletRepository;
     private final NodeFactoryApi nodeFactoryApi;
     private final CryptoTransactionWebHookApi cryptoTransactionWebHookApi;
+    private final InvoiceToInvoiceDtoMapperImpl invoiceToInvoiceDtoMapper;
     private final CryptoCurrency cryptoCurrency;
+    private final ExecutorService executorService;
     private final QrUtil qrUtil;
     private final SHA256Util sha256Util;
     private final RounderUtil rounderUtil;
@@ -139,7 +143,7 @@ public class PaymentServiceImpl implements PaymentService {
 
         Invoice newInvoice = Invoice.builder()
                 .status(InvoiceStatus.PENDING)
-                .uuid(existsOnUuid(UUID.randomUUID().toString()))
+                .uuid(existsOnInvoiceUuid(UUID.randomUUID().toString()))
                 .orderId(createPaymentInvoiceRequest.getOrderId())
                 .currency(createPaymentInvoiceRequest.getCurrency())
                 .network(createPaymentInvoiceRequest.getNetwork())
@@ -170,9 +174,9 @@ public class PaymentServiceImpl implements PaymentService {
         newInvoice.setPayerAmount(newInvoiceAmount + (newInvoiceAmount * paymentFee));
 
         BigDecimal newInvoiceMerchantAmountDecimal;
-        BigDecimal newInvoiceMerchantAmountWithComsDecimal = null;
+        BigDecimal newInvoicePaymentAmountDecimal = null;
         BigInteger newInvoiceMerchantAmount = null;
-        BigInteger newInvoiceMerchantAmountWithComs = null;
+        BigInteger newInvoicePaymentAmount = null;
 
         switch (newInvoice.getToken()) {
             case ETH -> {
@@ -188,11 +192,11 @@ public class PaymentServiceImpl implements PaymentService {
 
                 newInvoiceMerchantAmountDecimal = newInvoiceMerchantAmountDecimal.multiply(BigDecimal.valueOf((long) 1e18));
 
-                newInvoiceMerchantAmountWithComsDecimal =
+                newInvoicePaymentAmountDecimal =
                         newInvoiceMerchantAmountDecimal.add(newInvoiceMerchantAmountDecimal.multiply(BigDecimal.valueOf(paymentFee)));
 
                 newInvoiceMerchantAmount = rounderUtil.replaceDigitsWithZero(newInvoiceMerchantAmountDecimal.toBigInteger(), 5);
-                newInvoiceMerchantAmountWithComs = rounderUtil.replaceDigitsWithZero(newInvoiceMerchantAmountWithComsDecimal.toBigInteger(),
+                newInvoicePaymentAmount = rounderUtil.replaceDigitsWithZero(newInvoicePaymentAmountDecimal.toBigInteger(),
                         5);
             }
 
@@ -209,11 +213,11 @@ public class PaymentServiceImpl implements PaymentService {
 
                 newInvoiceMerchantAmountDecimal = newInvoiceMerchantAmountDecimal.multiply(BigDecimal.valueOf((long) 1e18));
 
-                newInvoiceMerchantAmountWithComsDecimal =
+                newInvoicePaymentAmountDecimal =
                         newInvoiceMerchantAmountDecimal.add(newInvoiceMerchantAmountDecimal.multiply(BigDecimal.valueOf(paymentFee)));
 
                 newInvoiceMerchantAmount = rounderUtil.replaceDigitsWithZero(newInvoiceMerchantAmountDecimal.toBigInteger(), 5);
-                newInvoiceMerchantAmountWithComs = rounderUtil.replaceDigitsWithZero(newInvoiceMerchantAmountWithComsDecimal.toBigInteger(),
+                newInvoicePaymentAmount = rounderUtil.replaceDigitsWithZero(newInvoicePaymentAmountDecimal.toBigInteger(),
                         5);
             }
 
@@ -230,11 +234,11 @@ public class PaymentServiceImpl implements PaymentService {
 
                 newInvoiceMerchantAmountDecimal = newInvoiceMerchantAmountDecimal.multiply(BigDecimal.valueOf((long) 1e18));
 
-                newInvoiceMerchantAmountWithComsDecimal =
+                newInvoicePaymentAmountDecimal =
                         newInvoiceMerchantAmountDecimal.add(newInvoiceMerchantAmountDecimal.multiply(BigDecimal.valueOf(paymentFee)));
 
                 newInvoiceMerchantAmount = rounderUtil.replaceDigitsWithZero(newInvoiceMerchantAmountDecimal.toBigInteger(), 4);
-                newInvoiceMerchantAmountWithComs = rounderUtil.replaceDigitsWithZero(newInvoiceMerchantAmountWithComsDecimal.toBigInteger(),
+                newInvoicePaymentAmount = rounderUtil.replaceDigitsWithZero(newInvoicePaymentAmountDecimal.toBigInteger(),
                         4);
             }
 
@@ -251,11 +255,11 @@ public class PaymentServiceImpl implements PaymentService {
 
                 newInvoiceMerchantAmountDecimal = newInvoiceMerchantAmountDecimal.multiply(BigDecimal.valueOf((long) 1e18));
 
-                newInvoiceMerchantAmountWithComsDecimal =
+                newInvoicePaymentAmountDecimal =
                         newInvoiceMerchantAmountDecimal.add(newInvoiceMerchantAmountDecimal.multiply(BigDecimal.valueOf(paymentFee)));
 
                 newInvoiceMerchantAmount = rounderUtil.replaceDigitsWithZero(newInvoiceMerchantAmountDecimal.toBigInteger(), 5);
-                newInvoiceMerchantAmountWithComs = rounderUtil.replaceDigitsWithZero(newInvoiceMerchantAmountWithComsDecimal.toBigInteger(),
+                newInvoicePaymentAmount = rounderUtil.replaceDigitsWithZero(newInvoicePaymentAmountDecimal.toBigInteger(),
                         5);
             }
 
@@ -272,11 +276,11 @@ public class PaymentServiceImpl implements PaymentService {
 
                 newInvoiceMerchantAmountDecimal = newInvoiceMerchantAmountDecimal.multiply(BigDecimal.valueOf((long) 1e18));
 
-                newInvoiceMerchantAmountWithComsDecimal =
+                newInvoicePaymentAmountDecimal =
                         newInvoiceMerchantAmountDecimal.add(newInvoiceMerchantAmountDecimal.multiply(BigDecimal.valueOf(paymentFee)));
 
                 newInvoiceMerchantAmount = rounderUtil.replaceDigitsWithZero(newInvoiceMerchantAmountDecimal.toBigInteger(), 5);
-                newInvoiceMerchantAmountWithComs = rounderUtil.replaceDigitsWithZero(newInvoiceMerchantAmountWithComsDecimal.toBigInteger(),
+                newInvoicePaymentAmount = rounderUtil.replaceDigitsWithZero(newInvoicePaymentAmountDecimal.toBigInteger(),
                         5);
             }
 
@@ -293,11 +297,11 @@ public class PaymentServiceImpl implements PaymentService {
 
                 newInvoiceMerchantAmountDecimal = newInvoiceMerchantAmountDecimal.multiply(BigDecimal.valueOf((long) 1e9));
 
-                newInvoiceMerchantAmountWithComsDecimal =
+                newInvoicePaymentAmountDecimal =
                         newInvoiceMerchantAmountDecimal.add(newInvoiceMerchantAmountDecimal.multiply(BigDecimal.valueOf(paymentFee)));
 
                 newInvoiceMerchantAmount = rounderUtil.replaceDigitsWithZero(newInvoiceMerchantAmountDecimal.toBigInteger(), 4);
-                newInvoiceMerchantAmountWithComs = rounderUtil.replaceDigitsWithZero(newInvoiceMerchantAmountWithComsDecimal.toBigInteger(),
+                newInvoicePaymentAmount = rounderUtil.replaceDigitsWithZero(newInvoicePaymentAmountDecimal.toBigInteger(),
                         4);
             }
 
@@ -314,11 +318,11 @@ public class PaymentServiceImpl implements PaymentService {
 
                 newInvoiceMerchantAmountDecimal = newInvoiceMerchantAmountDecimal.multiply(BigDecimal.valueOf((long) 1e8));
 
-                newInvoiceMerchantAmountWithComsDecimal =
+                newInvoicePaymentAmountDecimal =
                         newInvoiceMerchantAmountDecimal.add(newInvoiceMerchantAmountDecimal.multiply(BigDecimal.valueOf(paymentFee)));
 
                 newInvoiceMerchantAmount = rounderUtil.replaceDigitsWithZero(newInvoiceMerchantAmountDecimal.toBigInteger(), 5);
-                newInvoiceMerchantAmountWithComs = rounderUtil.replaceDigitsWithZero(newInvoiceMerchantAmountWithComsDecimal.toBigInteger(),
+                newInvoicePaymentAmount = rounderUtil.replaceDigitsWithZero(newInvoicePaymentAmountDecimal.toBigInteger(),
                         5);
             }
 
@@ -335,11 +339,11 @@ public class PaymentServiceImpl implements PaymentService {
 
                 newInvoiceMerchantAmountDecimal = newInvoiceMerchantAmountDecimal.multiply(BigDecimal.valueOf((long) 1e8));
 
-                newInvoiceMerchantAmountWithComsDecimal =
+                newInvoicePaymentAmountDecimal =
                         newInvoiceMerchantAmountDecimal.add(newInvoiceMerchantAmountDecimal.multiply(BigDecimal.valueOf(paymentFee)));
 
                 newInvoiceMerchantAmount = rounderUtil.replaceDigitsWithZero(newInvoiceMerchantAmountDecimal.toBigInteger(), 5);
-                newInvoiceMerchantAmountWithComs = rounderUtil.replaceDigitsWithZero(newInvoiceMerchantAmountWithComsDecimal.toBigInteger(),
+                newInvoicePaymentAmount = rounderUtil.replaceDigitsWithZero(newInvoicePaymentAmountDecimal.toBigInteger(),
                         5);
             }
 
@@ -357,11 +361,11 @@ public class PaymentServiceImpl implements PaymentService {
 
                 newInvoiceMerchantAmountDecimal = newInvoiceMerchantAmountDecimal.multiply(BigDecimal.valueOf((long) 1e8));
 
-                newInvoiceMerchantAmountWithComsDecimal =
+                newInvoicePaymentAmountDecimal =
                         newInvoiceMerchantAmountDecimal.add(newInvoiceMerchantAmountDecimal.multiply(BigDecimal.valueOf(paymentFee)));
 
                 newInvoiceMerchantAmount = rounderUtil.replaceDigitsWithZero(newInvoiceMerchantAmountDecimal.toBigInteger(), 5);
-                newInvoiceMerchantAmountWithComs = rounderUtil.replaceDigitsWithZero(newInvoiceMerchantAmountWithComsDecimal.toBigInteger(),
+                newInvoicePaymentAmount = rounderUtil.replaceDigitsWithZero(newInvoicePaymentAmountDecimal.toBigInteger(),
                         5);
             }
 
@@ -378,11 +382,11 @@ public class PaymentServiceImpl implements PaymentService {
 
                 newInvoiceMerchantAmountDecimal = newInvoiceMerchantAmountDecimal.multiply(BigDecimal.valueOf((long) 1e6));
 
-                newInvoiceMerchantAmountWithComsDecimal =
+                newInvoicePaymentAmountDecimal =
                         newInvoiceMerchantAmountDecimal.add(newInvoiceMerchantAmountDecimal.multiply(BigDecimal.valueOf(paymentFee)));
 
                 newInvoiceMerchantAmount = rounderUtil.replaceDigitsWithZero(newInvoiceMerchantAmountDecimal.toBigInteger(), 4);
-                newInvoiceMerchantAmountWithComs = rounderUtil.replaceDigitsWithZero(newInvoiceMerchantAmountWithComsDecimal.toBigInteger(),
+                newInvoicePaymentAmount = rounderUtil.replaceDigitsWithZero(newInvoicePaymentAmountDecimal.toBigInteger(),
                         4);
             }
 
@@ -400,11 +404,11 @@ public class PaymentServiceImpl implements PaymentService {
 
                 newInvoiceMerchantAmountDecimal = newInvoiceMerchantAmountDecimal.multiply(BigDecimal.valueOf((long) 1e6));
 
-                newInvoiceMerchantAmountWithComsDecimal =
+                newInvoicePaymentAmountDecimal =
                         newInvoiceMerchantAmountDecimal.add(newInvoiceMerchantAmountDecimal.multiply(BigDecimal.valueOf(paymentFee)));
 
                 newInvoiceMerchantAmount = rounderUtil.replaceDigitsWithZero(newInvoiceMerchantAmountDecimal.toBigInteger(), 4);
-                newInvoiceMerchantAmountWithComs = rounderUtil.replaceDigitsWithZero(newInvoiceMerchantAmountWithComsDecimal.toBigInteger(),
+                newInvoicePaymentAmount = rounderUtil.replaceDigitsWithZero(newInvoicePaymentAmountDecimal.toBigInteger(),
                         4);
             }
 
@@ -421,11 +425,11 @@ public class PaymentServiceImpl implements PaymentService {
 
                 newInvoiceMerchantAmountDecimal = newInvoiceMerchantAmountDecimal.multiply(BigDecimal.valueOf((long) 1e6));
 
-                newInvoiceMerchantAmountWithComsDecimal =
+                newInvoicePaymentAmountDecimal =
                         newInvoiceMerchantAmountDecimal.add(newInvoiceMerchantAmountDecimal.multiply(BigDecimal.valueOf(paymentFee)));
 
                 newInvoiceMerchantAmount = rounderUtil.replaceDigitsWithZero(newInvoiceMerchantAmountDecimal.toBigInteger(), 4);
-                newInvoiceMerchantAmountWithComs = rounderUtil.replaceDigitsWithZero(newInvoiceMerchantAmountWithComsDecimal.toBigInteger(),
+                newInvoicePaymentAmount = rounderUtil.replaceDigitsWithZero(newInvoicePaymentAmountDecimal.toBigInteger(),
                         4);
             }
 
@@ -442,23 +446,23 @@ public class PaymentServiceImpl implements PaymentService {
 
                 newInvoiceMerchantAmountDecimal = newInvoiceMerchantAmountDecimal.multiply(BigDecimal.valueOf((long) 1e18));
 
-                newInvoiceMerchantAmountWithComsDecimal =
+                newInvoicePaymentAmountDecimal =
                         newInvoiceMerchantAmountDecimal.add(newInvoiceMerchantAmountDecimal.multiply(BigDecimal.valueOf(paymentFee)));
 
                 newInvoiceMerchantAmount = rounderUtil.replaceDigitsWithZero(newInvoiceMerchantAmountDecimal.toBigInteger(), 4);
-                newInvoiceMerchantAmountWithComs = rounderUtil.replaceDigitsWithZero(newInvoiceMerchantAmountWithComsDecimal.toBigInteger(),
+                newInvoicePaymentAmount = rounderUtil.replaceDigitsWithZero(newInvoicePaymentAmountDecimal.toBigInteger(),
                         4);
             }
         }
         newInvoice.setMerchantAmount(newInvoiceMerchantAmount.toString());
 //        newInvoice.setMerchantAmount(existsOnPendingMerchantAmount(newInvoiceMerchantAmountWithComs, newInvoice.getToken()).toString());
-        newInvoice.setPaymentAmount(existsOnPendingMerchantAmount(newInvoiceMerchantAmountWithComs, newInvoice.getToken()).toString());
+        newInvoice.setPaymentAmount(existsOnInvoicePendingPaymentAmount(newInvoicePaymentAmount, newInvoice.getToken()).toString());
 
         NodeFactoryReceiveResponse nodeFactoryReceiveResponse = nodeFactoryApi.receive(NodeFactoryReceiveRequest.builder()
-                        .network(newInvoice.getNetwork())
-                        .token(newInvoice.getToken())
-                        .amount(new BigInteger(newInvoice.getPaymentAmount()))
-                        .timeout(createPaymentInvoiceRequest.getLifetime() / 60)
+                .network(newInvoice.getNetwork())
+                .token(newInvoice.getToken())
+                .amount(new BigInteger(newInvoice.getPaymentAmount()))
+                .timeout(createPaymentInvoiceRequest.getLifetime() / 60)
                 .build());
 
         newInvoice.setAddress(nodeFactoryReceiveResponse.getAddress());
@@ -511,8 +515,8 @@ public class PaymentServiceImpl implements PaymentService {
                                 .txId(finalNewInvoice.getTxId())
                                 .isFinal(finalNewInvoice.getIsFinal())
                                 .sign(sha256Util.encodeStringToSHA256(finalNewInvoice.getUuid()
-                                + "&" + finalNewInvoice.getOrderId() + "&" + finalNewInvoice.getMerchantAmount()
-                                + "&" + finalNewInvoice.getNetwork()  + "&" + finalNewInvoice.getToken() + "&" + apiKey))
+                                        + "&" + finalNewInvoice.getOrderId() + "&" + finalNewInvoice.getMerchantAmount()
+                                        + "&" + finalNewInvoice.getNetwork()  + "&" + finalNewInvoice.getToken() + "&" + apiKey))
                                 .build();
 
                         cryptoTransactionWebHookApi.sendPayment(webHookRequest, finalNewInvoice.getUrlCallback());
@@ -598,7 +602,7 @@ public class PaymentServiceImpl implements PaymentService {
         if (resendPaymentInvoiceWebhookRequest.getInvoiceUuid() != null) {
             invoice = invoiceRepository.findByUuid(resendPaymentInvoiceWebhookRequest.getInvoiceUuid());
         } else if (resendPaymentInvoiceWebhookRequest.getOrderId() != null) {
-           invoice = invoiceRepository.findByOrderId(resendPaymentInvoiceWebhookRequest.getOrderId());
+            invoice = invoiceRepository.findByOrderId(resendPaymentInvoiceWebhookRequest.getOrderId());
         } else {
             throw new PaymentException("Provide uuid or orderId");
         }
@@ -626,7 +630,7 @@ public class PaymentServiceImpl implements PaymentService {
                 .currency(invoice.getCurrency())
                 .merchantAmount(invoice.getMerchantAmount())
                 .network(invoice.getNetwork())
-                .token(invoice.getToken())  
+                .token(invoice.getToken())
                 .additionalData(invoice.getAdditionalData())
                 .txId(invoice.getTxId())
                 .isFinal(invoice.getIsFinal())
@@ -871,16 +875,45 @@ public class PaymentServiceImpl implements PaymentService {
                 .build();
     }
 
-    private String existsOnUuid(String uuid) {
-        if (invoiceRepository.existsByUuid(uuid)) {
-            return existsOnUuid(UUID.randomUUID().toString());
+    @Override
+    public CreateStaticWalletResponse createStaticWallet(String apiKey, CreateStaticWalletRequest createStaticWalletRequest) {
+        //todo create static wallet
+        if (staticWalletRepository.existsByOrderId(createStaticWalletRequest.getOrderId())) {
+            throw new PaymentException("Payment with this order_id already exists");
+        }
+
+        StaticWallet newStaticWallet = StaticWallet.builder()
+                .status(StaticWalletStatus.UNBLOCKED)
+                .uuid(existsOnStaticWalletUuid(UUID.randomUUID().toString()))
+                .orderId(createStaticWalletRequest.getOrderId())
+                .network(createStaticWalletRequest.getNetwork())
+                .token(createStaticWalletRequest.getToken())
+                .urlCallback(createStaticWalletRequest.getUrlCallback())
+                .createdAt(System.currentTimeMillis())
+                .build();
+
+
+        return null;
+    }
+
+    private String existsOnStaticWalletUuid(String uuid) {
+        if (staticWalletRepository.existsByUuid(uuid)) {
+            return existsOnStaticWalletUuid(UUID.randomUUID().toString());
         } else {
             return uuid;
         }
     }
 
-    private BigInteger existsOnPendingMerchantAmount(BigInteger merchantAmount, CryptoToken token) {
-        if (invoiceRepository.existsByMerchantAmountAndTokenAndStatus(merchantAmount.toString(), token, InvoiceStatus.PENDING)) {
+    private String existsOnInvoiceUuid(String uuid) {
+        if (invoiceRepository.existsByUuid(uuid)) {
+            return existsOnInvoiceUuid(UUID.randomUUID().toString());
+        } else {
+            return uuid;
+        }
+    }
+
+    private BigInteger existsOnInvoicePendingPaymentAmount(BigInteger merchantAmount, CryptoToken token) {
+        if (invoiceRepository.existsByPaymentAmountAndTokenAndStatus(merchantAmount.toString(), token, InvoiceStatus.PENDING)) {
             switch (token) {
                 case ETH -> merchantAmount = merchantAmount.add(BigInteger.valueOf((long) 1e12));
 
@@ -897,7 +930,7 @@ public class PaymentServiceImpl implements PaymentService {
                 case TRX, SOL -> merchantAmount = merchantAmount.add(BigInteger.valueOf((long) 1e4));
             }
 
-            return existsOnPendingMerchantAmount(merchantAmount, token);
+            return existsOnInvoicePendingPaymentAmount(merchantAmount, token);
         } else {
             return merchantAmount;
         }

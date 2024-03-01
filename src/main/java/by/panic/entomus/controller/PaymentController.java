@@ -158,4 +158,13 @@ public class PaymentController {
         merchantSecurity.checkOnCorrectMerchant(apiKey);
         return paymentService.getInvoiceServices(apiKey);
     }
+
+    //todo create static wallet
+    @PostMapping("/static-wallet")
+    public CreateStaticWalletResponse createStaticWallet(@RequestHeader("X-API-KEY") String apiKey,
+                                                         @Validated @RequestBody CreateStaticWalletRequest createStaticWalletRequest) {
+        merchantSecurity.checkOnCorrectMerchant(apiKey);
+
+
+    }
 }

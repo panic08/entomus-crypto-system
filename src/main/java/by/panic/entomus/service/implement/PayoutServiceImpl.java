@@ -63,7 +63,7 @@ public class PayoutServiceImpl implements PayoutService {
         switch (createPayoutRequest.getNetwork()) {
             case ETH -> {
                 if (createPayoutRequest.getToken().equals(CryptoToken.ETH)
-                && payoutAmountDecimal.compareTo(new BigDecimal(payoutLimitProperty.getMinEth())) < 0) {
+                        && payoutAmountDecimal.compareTo(new BigDecimal(payoutLimitProperty.getMinEth())) < 0) {
                     throw new PayoutException("The amount for create payout is too small");
                 } else if (createPayoutRequest.getToken().equals(CryptoToken.USDT)
                         && payoutAmountDecimal.compareTo(new BigDecimal(payoutLimitProperty.getMinEthUsdt())) < 0) {
@@ -80,7 +80,7 @@ public class PayoutServiceImpl implements PayoutService {
                 throw new PayoutException("The amount for create payout is too small"); }
             case TRX -> {
                 if (createPayoutRequest.getToken().equals(CryptoToken.TRX)
-                && payoutAmountDecimal.compareTo(new BigDecimal(payoutLimitProperty.getMinTrx())) < 0) {
+                        && payoutAmountDecimal.compareTo(new BigDecimal(payoutLimitProperty.getMinTrx())) < 0) {
                     throw new PayoutException("The amount for create payout is too small");
                 } else if (createPayoutRequest.getToken().equals(CryptoToken.USDT)
                         && payoutAmountDecimal.compareTo(new BigDecimal(payoutLimitProperty.getMinTrxUsdt())) < 0) {
@@ -92,7 +92,7 @@ public class PayoutServiceImpl implements PayoutService {
             }
             case BNB -> {
                 if (createPayoutRequest.getToken().equals(CryptoToken.BNB)
-                && payoutAmountDecimal.compareTo(new BigDecimal(payoutLimitProperty.getMinBnb())) < 0) {
+                        && payoutAmountDecimal.compareTo(new BigDecimal(payoutLimitProperty.getMinBnb())) < 0) {
                     throw new PayoutException("The amount for create payout is too small");
                 } else if (createPayoutRequest.getToken().equals(CryptoToken.USDT)
                         && payoutAmountDecimal.compareTo(new BigDecimal(payoutLimitProperty.getMinBnbUsdt())) < 0) {
@@ -161,6 +161,7 @@ public class PayoutServiceImpl implements PayoutService {
                 .network(createPayoutRequest.getNetwork())
                 .address(createPayoutRequest.getAddress())
                 .token(createPayoutRequest.getToken())
+                .amount(payoutAmount.toString())
                 .urlCallback(createPayoutRequest.getUrlCallback())
                 .balance(payoutWalletBalanceString)
                 .isFinal(true)
@@ -170,21 +171,22 @@ public class PayoutServiceImpl implements PayoutService {
 
         NodeFactorySendRequest nodeFactorySendRequest = NodeFactorySendRequest.builder()
                 .address(createPayoutRequest.getAddress())
-                        .network(createPayoutRequest.getNetwork())
-                        .token(createPayoutRequest.getToken())
+                .network(createPayoutRequest.getNetwork())
+                .token(createPayoutRequest.getToken())
                 .build();
 
         if (createPayoutRequest.getIsSubtract()) {
-            newPayout.setAmount(createPayoutRequest.getAmount());
+//            newPayout.setAmount(createPayoutRequest.getAmount());
             nodeFactorySendRequest.setAmount(new BigInteger(createPayoutRequest.getAmount()));
         } else {
-            newPayout.setAmount(payoutAmount.toString());
+//            newPayout.setAmount(payoutAmount.toString());
             nodeFactorySendRequest.setAmount(payoutAmount);
         }
 
-        NodeFactorySendResponse nodeFactorySendResponse = nodeFactoryApi.send(nodeFactorySendRequest);
-
-        newPayout.setTxId(nodeFactorySendResponse.getHash());
+//        NodeFactorySendResponse nodeFactorySendResponse = nodeFactoryApi.send(nodeFactorySendRequest);
+//
+//        newPayout.setTxId(nodeFactorySendResponse.getHash());
+        newPayout.setTxId("fdsfsfsdfs");
 
         newPayout = payoutRepository.save(newPayout);
 
@@ -269,7 +271,7 @@ public class PayoutServiceImpl implements PayoutService {
                 .isAvailable(true)
                 .limit(GetPayoutServiceResponse.Result.Limit.builder()
                         .minAmount(payoutLimitProperty.getMinEth())
-                        .minConvertedAmount(new BigDecimal(payoutLimitProperty.getMinEth()).divide(BigDecimal.valueOf(1e18)).doubleValue())
+                        .minConvertedAmount(new BigDecimal(payoutLimitProperty.getMinEth()).divide(BigDecimal.valueOf(1e18)).toString())
                         .build())
                 .commission(GetPayoutServiceResponse.Result.Commission.builder()
                         .feeAmount(0)
@@ -283,7 +285,7 @@ public class PayoutServiceImpl implements PayoutService {
                 .isAvailable(true)
                 .limit(GetPayoutServiceResponse.Result.Limit.builder()
                         .minAmount(payoutLimitProperty.getMinEthUsdt())
-                        .minConvertedAmount(new BigDecimal(payoutLimitProperty.getMinEthUsdt()).divide(BigDecimal.valueOf(1e6)).doubleValue())
+                        .minConvertedAmount(new BigDecimal(payoutLimitProperty.getMinEthUsdt()).divide(BigDecimal.valueOf(1e6)).toString())
                         .build())
                 .commission(GetPayoutServiceResponse.Result.Commission.builder()
                         .feeAmount(0)
@@ -297,7 +299,7 @@ public class PayoutServiceImpl implements PayoutService {
                 .isAvailable(true)
                 .limit(GetPayoutServiceResponse.Result.Limit.builder()
                         .minAmount(payoutLimitProperty.getMinEthUsdc())
-                        .minConvertedAmount(new BigDecimal(payoutLimitProperty.getMinEthUsdc()).divide(BigDecimal.valueOf(1e6)).doubleValue())
+                        .minConvertedAmount(new BigDecimal(payoutLimitProperty.getMinEthUsdc()).divide(BigDecimal.valueOf(1e6)).toString())
                         .build())
                 .commission(GetPayoutServiceResponse.Result.Commission.builder()
                         .feeAmount(0)
@@ -311,7 +313,7 @@ public class PayoutServiceImpl implements PayoutService {
                 .isAvailable(true)
                 .limit(GetPayoutServiceResponse.Result.Limit.builder()
                         .minAmount(payoutLimitProperty.getMinEthDai())
-                        .minConvertedAmount(new BigDecimal(payoutLimitProperty.getMinEthDai()).divide(BigDecimal.valueOf(1e18)).doubleValue())
+                        .minConvertedAmount(new BigDecimal(payoutLimitProperty.getMinEthDai()).divide(BigDecimal.valueOf(1e18)).toString())
                         .build())
                 .commission(GetPayoutServiceResponse.Result.Commission.builder()
                         .feeAmount(0)
@@ -326,7 +328,7 @@ public class PayoutServiceImpl implements PayoutService {
                 .isAvailable(true)
                 .limit(GetPayoutServiceResponse.Result.Limit.builder()
                         .minAmount(payoutLimitProperty.getMinBtc())
-                        .minConvertedAmount(new BigDecimal(payoutLimitProperty.getMinBtc()).divide(BigDecimal.valueOf(1e8)).doubleValue())
+                        .minConvertedAmount(new BigDecimal(payoutLimitProperty.getMinBtc()).divide(BigDecimal.valueOf(1e8)).toString())
                         .build())
                 .commission(GetPayoutServiceResponse.Result.Commission.builder()
                         .feeAmount(0)
@@ -341,7 +343,7 @@ public class PayoutServiceImpl implements PayoutService {
                 .isAvailable(true)
                 .limit(GetPayoutServiceResponse.Result.Limit.builder()
                         .minAmount(payoutLimitProperty.getMinBnb())
-                        .minConvertedAmount(new BigDecimal(payoutLimitProperty.getMinBnb()).divide(BigDecimal.valueOf(1e18)).doubleValue())
+                        .minConvertedAmount(new BigDecimal(payoutLimitProperty.getMinBnb()).divide(BigDecimal.valueOf(1e18)).toString())
                         .build())
                 .commission(GetPayoutServiceResponse.Result.Commission.builder()
                         .feeAmount(0)
@@ -355,7 +357,7 @@ public class PayoutServiceImpl implements PayoutService {
                 .isAvailable(true)
                 .limit(GetPayoutServiceResponse.Result.Limit.builder()
                         .minAmount(payoutLimitProperty.getMinBnbUsdt())
-                        .minConvertedAmount(new BigDecimal(payoutLimitProperty.getMinBnbUsdt()).divide(BigDecimal.valueOf(1e6)).doubleValue())
+                        .minConvertedAmount(new BigDecimal(payoutLimitProperty.getMinBnbUsdt()).divide(BigDecimal.valueOf(1e6)).toString())
                         .build())
                 .commission(GetPayoutServiceResponse.Result.Commission.builder()
                         .feeAmount(0)
@@ -369,7 +371,7 @@ public class PayoutServiceImpl implements PayoutService {
                 .isAvailable(true)
                 .limit(GetPayoutServiceResponse.Result.Limit.builder()
                         .minAmount(payoutLimitProperty.getMinBnbUsdc())
-                        .minConvertedAmount(new BigDecimal(payoutLimitProperty.getMinBnbUsdc()).divide(BigDecimal.valueOf(1e6)).doubleValue())
+                        .minConvertedAmount(new BigDecimal(payoutLimitProperty.getMinBnbUsdc()).divide(BigDecimal.valueOf(1e6)).toString())
                         .build())
                 .commission(GetPayoutServiceResponse.Result.Commission.builder()
                         .feeAmount(0)
@@ -383,7 +385,7 @@ public class PayoutServiceImpl implements PayoutService {
                 .isAvailable(true)
                 .limit(GetPayoutServiceResponse.Result.Limit.builder()
                         .minAmount(payoutLimitProperty.getMinBnbDai())
-                        .minConvertedAmount(new BigDecimal(payoutLimitProperty.getMinBnbDai()).divide(BigDecimal.valueOf(1e18)).doubleValue())
+                        .minConvertedAmount(new BigDecimal(payoutLimitProperty.getMinBnbDai()).divide(BigDecimal.valueOf(1e18)).toString())
                         .build())
                 .commission(GetPayoutServiceResponse.Result.Commission.builder()
                         .feeAmount(0)
@@ -398,7 +400,7 @@ public class PayoutServiceImpl implements PayoutService {
                 .isAvailable(true)
                 .limit(GetPayoutServiceResponse.Result.Limit.builder()
                         .minAmount(payoutLimitProperty.getMinTrx())
-                        .minConvertedAmount(new BigDecimal(payoutLimitProperty.getMinTrx()).divide(BigDecimal.valueOf(1e6)).doubleValue())
+                        .minConvertedAmount(new BigDecimal(payoutLimitProperty.getMinTrx()).divide(BigDecimal.valueOf(1e6)).toString())
                         .build())
                 .commission(GetPayoutServiceResponse.Result.Commission.builder()
                         .feeAmount(0)
@@ -412,7 +414,7 @@ public class PayoutServiceImpl implements PayoutService {
                 .isAvailable(true)
                 .limit(GetPayoutServiceResponse.Result.Limit.builder()
                         .minAmount(payoutLimitProperty.getMinTrxUsdt())
-                        .minConvertedAmount(new BigDecimal(payoutLimitProperty.getMinTrxUsdt()).divide(BigDecimal.valueOf(1e6)).doubleValue())
+                        .minConvertedAmount(new BigDecimal(payoutLimitProperty.getMinTrxUsdt()).divide(BigDecimal.valueOf(1e6)).toString())
                         .build())
                 .commission(GetPayoutServiceResponse.Result.Commission.builder()
                         .feeAmount(0)
@@ -426,7 +428,7 @@ public class PayoutServiceImpl implements PayoutService {
                 .isAvailable(true)
                 .limit(GetPayoutServiceResponse.Result.Limit.builder()
                         .minAmount(payoutLimitProperty.getMinTrxUsdc())
-                        .minConvertedAmount(new BigDecimal(payoutLimitProperty.getMinTrxUsdc()).divide(BigDecimal.valueOf(1e6)).doubleValue())
+                        .minConvertedAmount(new BigDecimal(payoutLimitProperty.getMinTrxUsdc()).divide(BigDecimal.valueOf(1e6)).toString())
                         .build())
                 .commission(GetPayoutServiceResponse.Result.Commission.builder()
                         .feeAmount(0)
@@ -441,7 +443,7 @@ public class PayoutServiceImpl implements PayoutService {
                 .isAvailable(true)
                 .limit(GetPayoutServiceResponse.Result.Limit.builder()
                         .minAmount(payoutLimitProperty.getMinPolygon())
-                        .minConvertedAmount(new BigDecimal(payoutLimitProperty.getMinPolygon()).divide(BigDecimal.valueOf(1e18)).doubleValue())
+                        .minConvertedAmount(new BigDecimal(payoutLimitProperty.getMinPolygon()).divide(BigDecimal.valueOf(1e18)).toString())
                         .build())
                 .commission(GetPayoutServiceResponse.Result.Commission.builder()
                         .feeAmount(0)
@@ -456,7 +458,7 @@ public class PayoutServiceImpl implements PayoutService {
                 .isAvailable(true)
                 .limit(GetPayoutServiceResponse.Result.Limit.builder()
                         .minAmount(payoutLimitProperty.getMinEtc())
-                        .minConvertedAmount(new BigDecimal(payoutLimitProperty.getMinEtc()).divide(BigDecimal.valueOf(1e18)).doubleValue())
+                        .minConvertedAmount(new BigDecimal(payoutLimitProperty.getMinEtc()).divide(BigDecimal.valueOf(1e18)).toString())
                         .build())
                 .commission(GetPayoutServiceResponse.Result.Commission.builder()
                         .feeAmount(0)
@@ -471,7 +473,7 @@ public class PayoutServiceImpl implements PayoutService {
                 .isAvailable(true)
                 .limit(GetPayoutServiceResponse.Result.Limit.builder()
                         .minAmount(payoutLimitProperty.getMinAvax())
-                        .minConvertedAmount(new BigDecimal(payoutLimitProperty.getMinAvax()).divide(BigDecimal.valueOf(1e18)).doubleValue())
+                        .minConvertedAmount(new BigDecimal(payoutLimitProperty.getMinAvax()).divide(BigDecimal.valueOf(1e18)).toString())
                         .build())
                 .commission(GetPayoutServiceResponse.Result.Commission.builder()
                         .feeAmount(0)
@@ -486,7 +488,7 @@ public class PayoutServiceImpl implements PayoutService {
                 .isAvailable(true)
                 .limit(GetPayoutServiceResponse.Result.Limit.builder()
                         .minAmount(payoutLimitProperty.getMinBch())
-                        .minConvertedAmount(new BigDecimal(payoutLimitProperty.getMinBch()).divide(BigDecimal.valueOf(1e8)).doubleValue())
+                        .minConvertedAmount(new BigDecimal(payoutLimitProperty.getMinBch()).divide(BigDecimal.valueOf(1e8)).toString())
                         .build())
                 .commission(GetPayoutServiceResponse.Result.Commission.builder()
                         .feeAmount(0)
@@ -501,7 +503,7 @@ public class PayoutServiceImpl implements PayoutService {
                 .isAvailable(true)
                 .limit(GetPayoutServiceResponse.Result.Limit.builder()
                         .minAmount(payoutLimitProperty.getMinSol())
-                        .minConvertedAmount(new BigDecimal(payoutLimitProperty.getMinSol()).divide(BigDecimal.valueOf(1e9)).doubleValue())
+                        .minConvertedAmount(new BigDecimal(payoutLimitProperty.getMinSol()).divide(BigDecimal.valueOf(1e9)).toString())
                         .build())
                 .commission(GetPayoutServiceResponse.Result.Commission.builder()
                         .feeAmount(0)
@@ -516,7 +518,7 @@ public class PayoutServiceImpl implements PayoutService {
                 .isAvailable(true)
                 .limit(GetPayoutServiceResponse.Result.Limit.builder()
                         .minAmount(payoutLimitProperty.getMinLtc())
-                        .minConvertedAmount(new BigDecimal(payoutLimitProperty.getMinLtc()).divide(BigDecimal.valueOf(1e8)).doubleValue())
+                        .minConvertedAmount(new BigDecimal(payoutLimitProperty.getMinLtc()).divide(BigDecimal.valueOf(1e8)).toString())
                         .build())
                 .commission(GetPayoutServiceResponse.Result.Commission.builder()
                         .feeAmount(0)

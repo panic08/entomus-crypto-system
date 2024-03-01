@@ -11,4 +11,5 @@ public interface PaymentService {
     ResendPaymentInvoiceWebHookResponse resendInvoiceWebHook(String apiKey, ResendPaymentInvoiceWebHookRequest resendPaymentInvoiceWebhookRequest);
     TestPaymentInvoiceWebHookResponse testInvoiceWebHook(String apiKey, TestPaymentInvoiceWebHookRequest testPaymentInvoiceWebHookRequest);
     GetPaymentInvoiceServiceResponse getInvoiceServices(String apiKey);
+    CreateStaticWalletResponse createStaticWallet(String apiKey, CreateStaticWalletRequest createStaticWalletRequest);
 }

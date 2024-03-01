@@ -41,7 +41,7 @@ public class GetPayoutServiceResponse {
             private String minAmount;
 
             @JsonProperty("min_converted_amount")
-            private double minConvertedAmount;
+            private String minConvertedAmount;
         }
 
         @Getter
