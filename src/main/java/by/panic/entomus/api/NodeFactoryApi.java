@@ -1,6 +1,7 @@
 package by.panic.entomus.api;
 
 import by.panic.entomus.api.payload.nodeFactory.*;
+import by.panic.entomus.entity.enums.CryptoNetwork;
 import by.panic.entomus.exception.NodeFactoryException;
 import by.panic.entomus.exception.PayoutException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -83,5 +84,35 @@ public class NodeFactoryApi {
         }
 
         return nodeFactorySendResponse;
+    }
+
+    public String createStaticWallet(NodeFactoryCreateStaticWalletRequest nodeFactoryCreateStaticWalletRequest) {
+        ResponseEntity<String> nodeFactoryCreateStaticWalletResponseEntity = null;
+
+        nodeFactoryCreateStaticWalletResponseEntity = restTemplate.postForEntity(URL + "/api/staticwallet/create", nodeFactoryCreateStaticWalletRequest,
+                String.class);
+
+        String staticWalletId = nodeFactoryCreateStaticWalletResponseEntity.getBody();
+
+        staticWalletId = staticWalletId.replaceAll("\"", "");
+
+        return staticWalletId;
+    }
+
+    public String getStaticWalletAddress(String staticWalletId, CryptoNetwork network) {
+        ResponseEntity<String> nodeFactoryGetStaticWalletAddressResponseEntity = null;
+
+        nodeFactoryGetStaticWalletAddressResponseEntity = restTemplate.getForEntity(URL + "/api/staticwallet/"
+        + staticWalletId + "/address?blockchain=" + network, String.class);
+
+        if (nodeFactoryGetStaticWalletAddressResponseEntity.getStatusCode().isError()) {
+            throw new NodeFactoryException("You have entered an invalid Network-Token pair");
+        }
+
+        String staticWalletAddress = nodeFactoryGetStaticWalletAddressResponseEntity.getBody();
+
+        staticWalletAddress = staticWalletAddress.replaceAll("\"", "");
+
+        return staticWalletAddress;
     }
 }

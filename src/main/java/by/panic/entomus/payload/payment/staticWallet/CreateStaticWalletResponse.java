@@ -1,4 +1,4 @@
-package by.panic.entomus.payload.payment;
+package by.panic.entomus.payload.payment.staticWallet;
 
 import by.panic.entomus.dto.StaticWalletDto;
 import lombok.Builder;

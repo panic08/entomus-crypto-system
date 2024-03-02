@@ -1,4 +1,4 @@
-package by.panic.entomus.payload.payment;
+package by.panic.entomus.payload.payment.staticWallet;
 
 import by.panic.entomus.entity.enums.CryptoNetwork;
 import by.panic.entomus.entity.enums.CryptoToken;
@@ -14,7 +14,10 @@ import lombok.Setter;
 @Setter
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class CreateStaticWalletRequest {
+    @NotNull(message = "Network not may be null")
     private CryptoNetwork network;
+
+    @NotNull(message = "Token not may be null")
     private CryptoToken token;
 
     @NotNull(message = "Order_id not may be null")

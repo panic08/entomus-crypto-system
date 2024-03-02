@@ -13,6 +13,8 @@ import java.util.List;
 public interface PayoutRepository extends JpaRepository<Payout, Long> {
     boolean existsByUuid(String uuid);
     boolean existsByOrderId(String orderId);
+    boolean existsByUuidAndMerchant(String uuid, Merchant merchant);
+    boolean existsByOrderIdAndMerchant(String orderId, Merchant merchant);
     Payout findByUuid(String uuid);
     Payout findByOrderId(String orderId);
 

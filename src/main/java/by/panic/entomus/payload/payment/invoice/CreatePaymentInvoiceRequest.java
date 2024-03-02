@@ -1,4 +1,4 @@
-package by.panic.entomus.payload.payment;
+package by.panic.entomus.payload.payment.invoice;
 
 import by.panic.entomus.entity.enums.CryptoNetwork;
 import by.panic.entomus.entity.enums.CryptoToken;

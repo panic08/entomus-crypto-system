@@ -2,6 +2,7 @@ package by.panic.entomus.service.implement;
 
 import by.panic.entomus.api.NodeFactoryApi;
 import by.panic.entomus.api.CryptoTransactionWebHookApi;
+import by.panic.entomus.api.payload.nodeFactory.NodeFactoryCreateStaticWalletRequest;
 import by.panic.entomus.api.payload.nodeFactory.NodeFactoryGetStatusResponse;
 import by.panic.entomus.api.payload.nodeFactory.NodeFactoryReceiveRequest;
 import by.panic.entomus.api.payload.nodeFactory.NodeFactoryReceiveResponse;
@@ -18,7 +19,12 @@ import by.panic.entomus.entity.enums.InvoiceStatus;
 import by.panic.entomus.entity.enums.StaticWalletStatus;
 import by.panic.entomus.exception.PaymentException;
 import by.panic.entomus.mapper.InvoiceToInvoiceDtoMapperImpl;
-import by.panic.entomus.payload.payment.*;
+import by.panic.entomus.mapper.StaticWalletToStaticWalletDtoMapperImpl;
+import by.panic.entomus.payload.payment.invoice.*;
+import by.panic.entomus.payload.payment.staticWallet.BlockStaticWalletRequest;
+import by.panic.entomus.payload.payment.staticWallet.BlockStaticWalletResponse;
+import by.panic.entomus.payload.payment.staticWallet.CreateStaticWalletRequest;
+import by.panic.entomus.payload.payment.staticWallet.CreateStaticWalletResponse;
 import by.panic.entomus.repository.InvoiceRepository;
 import by.panic.entomus.repository.MerchantRepository;
 import by.panic.entomus.repository.StaticWalletRepository;
@@ -56,6 +62,7 @@ public class PaymentServiceImpl implements PaymentService {
     private final NodeFactoryApi nodeFactoryApi;
     private final CryptoTransactionWebHookApi cryptoTransactionWebHookApi;
     private final InvoiceToInvoiceDtoMapperImpl invoiceToInvoiceDtoMapper;
+    private final StaticWalletToStaticWalletDtoMapperImpl staticWalletToStaticWalletDtoMapper;
     private final CryptoCurrency cryptoCurrency;
     private final ExecutorService executorService;
     private final QrUtil qrUtil;
@@ -557,19 +564,22 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     public GetPaymentInvoiceInfoResponse getInvoiceInfo(String apiKey, String uuid, String orderId) {
-        if (uuid != null) {
-            return GetPaymentInvoiceInfoResponse.builder()
-                    .state(0)
-                    .result(invoiceToInvoiceDtoMapper.invoiceToInvoiceDto(invoiceRepository.findByUuid(uuid)))
-                    .build();
-        } else if (orderId != null) {
-            return GetPaymentInvoiceInfoResponse.builder()
-                    .state(0)
-                    .result(invoiceToInvoiceDtoMapper.invoiceToInvoiceDto(invoiceRepository.findByOrderId(orderId)))
-                    .build();
+        Merchant principalMerchant = merchantRepository.findByApiKey(apiKey);
+
+        Invoice principalInvoice;
+
+        if (invoiceRepository.existsByUuidAndMerchant(uuid, principalMerchant)) {
+            principalInvoice = invoiceRepository.findByUuid(uuid);
+        } else if (invoiceRepository.existsByOrderIdAndMerchant(orderId, principalMerchant)) {
+            principalInvoice = invoiceRepository.findByOrderId(orderId);
+        } else {
+            throw new PaymentException("You do not have a invoice with that uuid or order_id");
         }
 
-        throw new PaymentException("Provide uuid or orderId");
+        return GetPaymentInvoiceInfoResponse.builder()
+                .state(0)
+                .result(invoiceToInvoiceDtoMapper.invoiceToInvoiceDto(principalInvoice))
+                .build();
     }
 
     @Override
@@ -597,49 +607,51 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     public ResendPaymentInvoiceWebHookResponse resendInvoiceWebHook(String apiKey, ResendPaymentInvoiceWebHookRequest resendPaymentInvoiceWebhookRequest) {
-        Invoice invoice;
+        Merchant principalMerchant = merchantRepository.findByApiKey(apiKey);
 
-        if (resendPaymentInvoiceWebhookRequest.getInvoiceUuid() != null) {
-            invoice = invoiceRepository.findByUuid(resendPaymentInvoiceWebhookRequest.getInvoiceUuid());
-        } else if (resendPaymentInvoiceWebhookRequest.getOrderId() != null) {
-            invoice = invoiceRepository.findByOrderId(resendPaymentInvoiceWebhookRequest.getOrderId());
+        Invoice principalInvoice;
+
+        if (invoiceRepository.existsByUuidAndMerchant(resendPaymentInvoiceWebhookRequest.getInvoiceUuid(), principalMerchant)) {
+            principalInvoice = invoiceRepository.findByUuid(resendPaymentInvoiceWebhookRequest.getInvoiceUuid());
+        } else if (invoiceRepository.existsByOrderIdAndMerchant(resendPaymentInvoiceWebhookRequest.getOrderId(), principalMerchant)) {
+            principalInvoice = invoiceRepository.findByOrderId(resendPaymentInvoiceWebhookRequest.getOrderId());
         } else {
-            throw new PaymentException("Provide uuid or orderId");
+            throw new PaymentException("You do not have a invoice with that uuid or order_id");
         }
 
-        if (invoice == null) {
+        if (principalInvoice == null) {
             throw new PaymentException("Payment not found");
         }
 
-        if (!invoice.getStatus().equals(InvoiceStatus.SUCCESS)) {
+        if (!principalInvoice.getStatus().equals(InvoiceStatus.SUCCESS)) {
             throw new PaymentException("Payment has not yet received \"SUCCESS\" status");
         }
 
-        if (invoice.getUrlCallback() == null) {
+        if (principalInvoice.getUrlCallback() == null) {
             throw new PaymentException("Payment does not specify url_callback");
         }
 
         PaymentWebHookRequest webHookRequest = PaymentWebHookRequest.builder()
                 .type(CryptoTransactionWebHookType.PAYMENT)
-                .uuid(invoice.getUuid())
-                .status(invoice.getStatus())
-                .orderId(invoice.getOrderId())
-                .amount(invoice.getAmount())
-                .paymentAmount(invoice.getPaymentAmount())
-                .payerAmount(invoice.getPayerAmount())
-                .currency(invoice.getCurrency())
-                .merchantAmount(invoice.getMerchantAmount())
-                .network(invoice.getNetwork())
-                .token(invoice.getToken())
-                .additionalData(invoice.getAdditionalData())
-                .txId(invoice.getTxId())
-                .isFinal(invoice.getIsFinal())
-                .sign(sha256Util.encodeStringToSHA256(invoice.getUuid()
-                        + "&" + invoice.getOrderId() + "&" + invoice.getMerchantAmount()
-                        + "&" + invoice.getNetwork()  + "&" + invoice.getToken() + "&" + apiKey))
+                .uuid(principalInvoice.getUuid())
+                .status(principalInvoice.getStatus())
+                .orderId(principalInvoice.getOrderId())
+                .amount(principalInvoice.getAmount())
+                .paymentAmount(principalInvoice.getPaymentAmount())
+                .payerAmount(principalInvoice.getPayerAmount())
+                .currency(principalInvoice.getCurrency())
+                .merchantAmount(principalInvoice.getMerchantAmount())
+                .network(principalInvoice.getNetwork())
+                .token(principalInvoice.getToken())
+                .additionalData(principalInvoice.getAdditionalData())
+                .txId(principalInvoice.getTxId())
+                .isFinal(principalInvoice.getIsFinal())
+                .sign(sha256Util.encodeStringToSHA256(principalInvoice.getUuid()
+                        + "&" + principalInvoice.getOrderId() + "&" + principalInvoice.getMerchantAmount()
+                        + "&" + principalInvoice.getNetwork()  + "&" + principalInvoice.getToken() + "&" + apiKey))
                 .build();
 
-        cryptoTransactionWebHookApi.sendPayment(webHookRequest, invoice.getUrlCallback());
+        cryptoTransactionWebHookApi.sendPayment(webHookRequest, principalInvoice.getUrlCallback());
 
         return ResendPaymentInvoiceWebHookResponse.builder()
                 .state(0)
@@ -875,25 +887,88 @@ public class PaymentServiceImpl implements PaymentService {
                 .build();
     }
 
+    @Transactional
     @Override
     public CreateStaticWalletResponse createStaticWallet(String apiKey, CreateStaticWalletRequest createStaticWalletRequest) {
-        //todo create static wallet
         if (staticWalletRepository.existsByOrderId(createStaticWalletRequest.getOrderId())) {
             throw new PaymentException("Payment with this order_id already exists");
         }
 
+        Merchant principalMerchant = merchantRepository.findByApiKey(apiKey);
+
+        String staticWalletId = nodeFactoryApi.createStaticWallet(NodeFactoryCreateStaticWalletRequest.builder()
+                .apiKey(apiKey).build());
+
+        String staticWalletAddress = nodeFactoryApi.getStaticWalletAddress(staticWalletId, createStaticWalletRequest.getNetwork());
+
         StaticWallet newStaticWallet = StaticWallet.builder()
-                .status(StaticWalletStatus.UNBLOCKED)
+                .status(StaticWalletStatus.ACTIVE)
+                .walletId(staticWalletId)
                 .uuid(existsOnStaticWalletUuid(UUID.randomUUID().toString()))
                 .orderId(createStaticWalletRequest.getOrderId())
                 .network(createStaticWalletRequest.getNetwork())
                 .token(createStaticWalletRequest.getToken())
+                .address(staticWalletAddress)
                 .urlCallback(createStaticWalletRequest.getUrlCallback())
                 .createdAt(System.currentTimeMillis())
+                .merchant(principalMerchant)
                 .build();
 
+        newStaticWallet = staticWalletRepository.save(newStaticWallet);
 
-        return null;
+        return CreateStaticWalletResponse.builder()
+                .state(0)
+                .result(staticWalletToStaticWalletDtoMapper.staticWalletToStaticWalletDto(newStaticWallet))
+                .build();
+    }
+
+    @Override
+    public BlockStaticWalletResponse blockStaticWallet(String apiKey, BlockStaticWalletRequest blockStaticWalletRequest) {
+        Merchant principalMerchant = merchantRepository.findByApiKey(apiKey);
+
+        StaticWallet principalStaticWallet = null;
+
+        if (staticWalletRepository.existsByUuidAndMerchant(blockStaticWalletRequest.getUuid(), principalMerchant)) {
+            principalStaticWallet = staticWalletRepository.findByUuid(blockStaticWalletRequest.getUuid());
+        } else if (staticWalletRepository.existsByOrderIdAndMerchant(blockStaticWalletRequest.getOrderId(), principalMerchant)) {
+            principalStaticWallet = staticWalletRepository.findByOrderId(blockStaticWalletRequest.getOrderId());
+        } else {
+            throw new PaymentException("You do not have a static wallet with that uuid or order_id");
+        }
+
+        principalStaticWallet.setStatus(StaticWalletStatus.BLOCKED);
+
+        principalStaticWallet = staticWalletRepository.save(principalStaticWallet);
+
+        return BlockStaticWalletResponse.builder()
+                .state(0)
+                .result(BlockStaticWalletResponse.Result.builder()
+                        .status(StaticWalletStatus.BLOCKED)
+                        .uuid(principalStaticWallet.getUuid())
+                        .build())
+                .build();
+    }
+
+    @Override
+    public ResponseEntity<byte[]> createStaticWalletQr(String apiKey, String uuid) {
+        String address = staticWalletRepository.findAddressByUuid(uuid);
+
+        if (address == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        byte[] generatedAddress = null;
+
+        try {
+            generatedAddress = qrUtil.generateTextQRCode(address, 256, 256);
+        } catch (WriterException | IOException e) {
+            log.warn(e.getMessage());
+            generatedAddress = null;
+        }
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.IMAGE_PNG)
+                .body(generatedAddress);
     }
 
     private String existsOnStaticWalletUuid(String uuid) {

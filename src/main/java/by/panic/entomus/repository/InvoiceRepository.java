@@ -15,6 +15,8 @@ import java.util.List;
 public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
     boolean existsByOrderId(String orderId);
     boolean existsByUuid(String uuid);
+    boolean existsByOrderIdAndMerchant(String orderId, Merchant merchant);
+    boolean existsByUuidAndMerchant(String uuid, Merchant merchant);
     boolean existsByPaymentAmountAndTokenAndStatus(String paymentAmount, CryptoToken token, InvoiceStatus status);
     @Query("SELECT i.address FROM invoices_table i WHERE i.uuid = :uuid")
     String findAddressByUuid(@Param("uuid") String uuid);

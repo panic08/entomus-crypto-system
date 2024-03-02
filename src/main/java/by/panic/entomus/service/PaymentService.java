@@ -1,6 +1,10 @@
 package by.panic.entomus.service;
 
-import by.panic.entomus.payload.payment.*;
+import by.panic.entomus.payload.payment.invoice.*;
+import by.panic.entomus.payload.payment.staticWallet.BlockStaticWalletRequest;
+import by.panic.entomus.payload.payment.staticWallet.BlockStaticWalletResponse;
+import by.panic.entomus.payload.payment.staticWallet.CreateStaticWalletRequest;
+import by.panic.entomus.payload.payment.staticWallet.CreateStaticWalletResponse;
 import org.springframework.http.ResponseEntity;
 
 public interface PaymentService {
@@ -12,4 +16,6 @@ public interface PaymentService {
     TestPaymentInvoiceWebHookResponse testInvoiceWebHook(String apiKey, TestPaymentInvoiceWebHookRequest testPaymentInvoiceWebHookRequest);
     GetPaymentInvoiceServiceResponse getInvoiceServices(String apiKey);
     CreateStaticWalletResponse createStaticWallet(String apiKey, CreateStaticWalletRequest createStaticWalletRequest);
+    BlockStaticWalletResponse blockStaticWallet(String apiKey, BlockStaticWalletRequest blockStaticWalletRequest);
+    ResponseEntity<byte[]> createStaticWalletQr(String apiKey, String uuid);
 }

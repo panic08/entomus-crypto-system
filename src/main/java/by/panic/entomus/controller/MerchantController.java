@@ -3,7 +3,6 @@ package by.panic.entomus.controller;
 import by.panic.entomus.payload.CreateMerchantResponse;
 import by.panic.entomus.payload.ExceptionHandler;
 import by.panic.entomus.payload.merchant.GetMerchantBalanceResponse;
-import by.panic.entomus.payload.payment.GetPaymentInvoiceInfoResponse;
 import by.panic.entomus.security.MerchantSecurity;
 import by.panic.entomus.service.implement.MerchantServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;

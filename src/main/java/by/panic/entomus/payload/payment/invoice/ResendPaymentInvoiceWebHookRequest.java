@@ -1,4 +1,4 @@
-package by.panic.entomus.payload.payment;
+package by.panic.entomus.payload.payment.invoice;
 
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;

@@ -1,4 +1,4 @@
-package by.panic.entomus.payload.payment;
+package by.panic.entomus.payload.payment.invoice;
 
 import lombok.Builder;
 import lombok.Getter;

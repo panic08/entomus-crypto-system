@@ -1,4 +1,4 @@
-package by.panic.entomus.payload.payment;
+package by.panic.entomus.payload.payment.invoice;
 
 import by.panic.entomus.dto.InvoiceDto;
 import io.swagger.v3.oas.annotations.media.Schema;

@@ -33,7 +33,7 @@ public class PayoutController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "You have successfully created an Payout and received a \"CreatePayoutResponse\"",
                     content = {@Content(mediaType = "application/json", schema = @Schema(implementation = CreatePayoutResponse.class))}),
-            @ApiResponse(responseCode = "400", description = "Incorrect X-API-KEY",
+            @ApiResponse(responseCode = "400", description = "Incorrect X-API-KEY || Payout with this order_id already exists || The amount for create payout is too small || Not enough funds || Not enough funds for Subtract = true",
                     content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionHandler.class))})
     })
     @PostMapping
@@ -51,7 +51,7 @@ public class PayoutController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "You have successfully received payout information",
                     content = {@Content(mediaType = "application/json", schema = @Schema(implementation = GetPayoutInfoResponse.class))}),
-            @ApiResponse(responseCode = "400", description = "Incorrect X-API-KEY || Payout with this order_id already exists || The amount for create payout is too small || Not enough funds || Not enough funds for Subtract = true",
+            @ApiResponse(responseCode = "400", description = "Incorrect X-API-KEY || You do not have a payout with that uuid or order_id",
                     content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionHandler.class))})
     })
     @GetMapping("/info")

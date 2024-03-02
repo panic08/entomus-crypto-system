@@ -221,19 +221,22 @@ public class PayoutServiceImpl implements PayoutService {
 
     @Override
     public GetPayoutInfoResponse getInfo(String apiKey, String uuid, String orderId) {
-        if (uuid != null) {
-            return GetPayoutInfoResponse.builder()
-                    .state(0)
-                    .result(payoutToPayoutDtoMapper.payoutToPayoutDto(payoutRepository.findByUuid(uuid)))
-                    .build();
-        } else if (orderId != null) {
-            return GetPayoutInfoResponse.builder()
-                    .state(0)
-                    .result(payoutToPayoutDtoMapper.payoutToPayoutDto(payoutRepository.findByOrderId(orderId)))
-                    .build();
+        Merchant principalMerchant = merchantRepository.findByApiKey(apiKey);
+
+        Payout principalPayout;
+
+        if (payoutRepository.existsByUuidAndMerchant(uuid, principalMerchant)) {
+            principalPayout = payoutRepository.findByUuid(uuid);
+        } else if (payoutRepository.existsByOrderIdAndMerchant(orderId, principalMerchant)) {
+            principalPayout = payoutRepository.findByOrderId(orderId);
+        } else {
+            throw new PaymentException("You do not have a payout with that uuid or order_id");
         }
 
-        throw new PaymentException("Provide uuid or orderId");
+        return GetPayoutInfoResponse.builder()
+                .state(0)
+                .result(payoutToPayoutDtoMapper.payoutToPayoutDto(principalPayout))
+                .build();
     }
 
     @Override

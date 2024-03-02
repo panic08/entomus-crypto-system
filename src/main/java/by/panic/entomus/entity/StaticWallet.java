@@ -16,7 +16,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class StaticWallet {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(name = "wallet_id", unique = true, nullable = false)
+    private String walletId;
 
     @Column(name = "status", nullable = false)
     @Enumerated(value = EnumType.STRING)
@@ -39,9 +43,13 @@ public class StaticWallet {
     @Enumerated(value = EnumType.STRING)
     private CryptoToken token;
 
-    @Column(name = "url_callback", nullable = false)
+    @Column(name = "url_callback", nullable = true)
     private String urlCallback;
 
     @Column(name = "created_at", nullable = false)
     private Long createdAt;
+
+    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JoinColumn(name = "merchant_id", nullable = false)
+    private Merchant merchant;
 }

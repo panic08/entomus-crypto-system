@@ -1,4 +1,4 @@
-package by.panic.entomus.payload.payment;
+package by.panic.entomus.payload.payment.invoice;
 
 import by.panic.entomus.dto.InvoiceDto;
 import lombok.Builder;
@@ -8,7 +8,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Builder
-public class CreatePaymentInvoiceResponse {
+public class GetPaymentInvoiceInfoResponse {
     private int state;
     private InvoiceDto result;
 }

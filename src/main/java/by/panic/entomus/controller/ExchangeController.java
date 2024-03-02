@@ -3,7 +3,6 @@ package by.panic.entomus.controller;
 import by.panic.entomus.entity.enums.CryptoToken;
 import by.panic.entomus.payload.ExceptionHandler;
 import by.panic.entomus.payload.exchangeRate.GetExchangeRateListResponse;
-import by.panic.entomus.payload.payment.GetPaymentInvoiceInfoResponse;
 import by.panic.entomus.service.implement.ExchangeRateServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;

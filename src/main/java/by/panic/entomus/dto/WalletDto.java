@@ -11,7 +11,10 @@ import lombok.Setter;
 @Schema(name = "Wallet")
 public class WalletDto {
     private String uuid;
+
     private CryptoNetwork network;
+
     private CryptoToken token;
+
     private String balance;
 }
