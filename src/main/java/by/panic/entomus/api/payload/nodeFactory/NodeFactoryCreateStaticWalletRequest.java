@@ -11,4 +11,7 @@ import lombok.Setter;
 public class NodeFactoryCreateStaticWalletRequest {
     @JsonProperty("apiKey")
     private String apiKey;
+
+    @JsonProperty("url_callback")
+    private String urlCallback;
 }

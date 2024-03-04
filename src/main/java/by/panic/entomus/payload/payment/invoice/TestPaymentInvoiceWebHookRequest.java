@@ -26,8 +26,8 @@ public class TestPaymentInvoiceWebHookRequest {
     @Size(min = 1, max = 128, message = "Order_id must contain from 1 to 128 characters")
     private String orderId;
 
-    @NotNull(message = "Merchant_amount not may be null")
-    private String merchantAmount;
+    @NotNull(message = "Payment_amount not may be null")
+    private String paymentAmount;
 
     @NotNull(message = "Network not may be null")
     private CryptoNetwork network;

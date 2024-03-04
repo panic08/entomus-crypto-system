@@ -21,10 +21,7 @@ import by.panic.entomus.exception.PaymentException;
 import by.panic.entomus.mapper.InvoiceToInvoiceDtoMapperImpl;
 import by.panic.entomus.mapper.StaticWalletToStaticWalletDtoMapperImpl;
 import by.panic.entomus.payload.payment.invoice.*;
-import by.panic.entomus.payload.payment.staticWallet.BlockStaticWalletRequest;
-import by.panic.entomus.payload.payment.staticWallet.BlockStaticWalletResponse;
-import by.panic.entomus.payload.payment.staticWallet.CreateStaticWalletRequest;
-import by.panic.entomus.payload.payment.staticWallet.CreateStaticWalletResponse;
+import by.panic.entomus.payload.payment.staticWallet.*;
 import by.panic.entomus.repository.InvoiceRepository;
 import by.panic.entomus.repository.MerchantRepository;
 import by.panic.entomus.repository.StaticWalletRepository;
@@ -71,6 +68,9 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Value("${payments.fee}")
     private Double paymentFee;
+
+    @Value("${staticWallets.url}")
+    private String staticWalletsUrl;
 
     @Override
     public ResponseEntity<byte[]> createInvoiceQr(String apiKey, String uuid) {
@@ -522,7 +522,7 @@ public class PaymentServiceImpl implements PaymentService {
                                 .txId(finalNewInvoice.getTxId())
                                 .isFinal(finalNewInvoice.getIsFinal())
                                 .sign(sha256Util.encodeStringToSHA256(finalNewInvoice.getUuid()
-                                        + "&" + finalNewInvoice.getOrderId() + "&" + finalNewInvoice.getMerchantAmount()
+                                        + "&" + finalNewInvoice.getOrderId() + "&" + finalNewInvoice.getPaymentAmount()
                                         + "&" + finalNewInvoice.getNetwork()  + "&" + finalNewInvoice.getToken() + "&" + apiKey))
                                 .build();
 
@@ -647,7 +647,7 @@ public class PaymentServiceImpl implements PaymentService {
                 .txId(principalInvoice.getTxId())
                 .isFinal(principalInvoice.getIsFinal())
                 .sign(sha256Util.encodeStringToSHA256(principalInvoice.getUuid()
-                        + "&" + principalInvoice.getOrderId() + "&" + principalInvoice.getMerchantAmount()
+                        + "&" + principalInvoice.getOrderId() + "&" + principalInvoice.getPaymentAmount()
                         + "&" + principalInvoice.getNetwork()  + "&" + principalInvoice.getToken() + "&" + apiKey))
                 .build();
 
@@ -670,11 +670,11 @@ public class PaymentServiceImpl implements PaymentService {
                 .uuid(testPaymentInvoiceWebHookRequest.getUuid())
                 .status(testPaymentInvoiceWebHookRequest.getStatus())
                 .orderId(testPaymentInvoiceWebHookRequest.getOrderId())
-                .merchantAmount(testPaymentInvoiceWebHookRequest.getMerchantAmount())
+                .paymentAmount(testPaymentInvoiceWebHookRequest.getPaymentAmount())
                 .network(testPaymentInvoiceWebHookRequest.getNetwork())
                 .token(testPaymentInvoiceWebHookRequest.getToken())
                 .sign(sha256Util.encodeStringToSHA256(testPaymentInvoiceWebHookRequest.getUuid()
-                        + "&" + testPaymentInvoiceWebHookRequest.getOrderId() + "&" + testPaymentInvoiceWebHookRequest.getMerchantAmount()
+                        + "&" + testPaymentInvoiceWebHookRequest.getOrderId() + "&" + testPaymentInvoiceWebHookRequest.getPaymentAmount()
                         + "&" + testPaymentInvoiceWebHookRequest.getNetwork()  + "&" + testPaymentInvoiceWebHookRequest.getToken() + "&" + apiKey))
                 .build();
 
@@ -897,7 +897,9 @@ public class PaymentServiceImpl implements PaymentService {
         Merchant principalMerchant = merchantRepository.findByApiKey(apiKey);
 
         String staticWalletId = nodeFactoryApi.createStaticWallet(NodeFactoryCreateStaticWalletRequest.builder()
-                .apiKey(apiKey).build());
+                .apiKey(apiKey)
+                .urlCallback(staticWalletsUrl)
+                .build());
 
         String staticWalletAddress = nodeFactoryApi.getStaticWalletAddress(staticWalletId, createStaticWalletRequest.getNetwork());
 
@@ -922,6 +924,7 @@ public class PaymentServiceImpl implements PaymentService {
                 .build();
     }
 
+    @Transactional
     @Override
     public BlockStaticWalletResponse blockStaticWallet(String apiKey, BlockStaticWalletRequest blockStaticWalletRequest) {
         Merchant principalMerchant = merchantRepository.findByApiKey(apiKey);
@@ -969,6 +972,56 @@ public class PaymentServiceImpl implements PaymentService {
         return ResponseEntity.ok()
                 .contentType(MediaType.IMAGE_PNG)
                 .body(generatedAddress);
+    }
+
+    @Transactional
+    @Override
+    public void handleStaticWalletWebHook(StaticWalletTransactionWebHookRequest staticWalletTransactionWebHookRequest) {
+        StaticWallet staticWallet = staticWalletRepository.findByWalletId(staticWalletTransactionWebHookRequest.getWalletId());
+        Merchant staticWalletMerchant = staticWallet.getMerchant();
+
+        if (staticWallet.getStatus().equals(StaticWalletStatus.BLOCKED)) {
+            return;
+        }
+
+        BigDecimal staticWalletTransactionAmountDecimal = new BigDecimal(staticWalletTransactionWebHookRequest.getAmount());
+
+        Wallet wallet = walletRepository.findByNetworkAndTokenAndMerchant(staticWalletTransactionWebHookRequest.getNetwork(),
+                staticWalletTransactionWebHookRequest.getToken(), staticWalletMerchant);
+
+        BigInteger walletBalance = new BigInteger(wallet.getBalance());
+
+        BigInteger staticWalletTransactionAmountWithComission =
+                staticWalletTransactionAmountDecimal.subtract(staticWalletTransactionAmountDecimal.multiply(BigDecimal.valueOf(paymentFee)))
+                        .toBigInteger();
+
+        walletBalance = walletBalance.add(staticWalletTransactionAmountWithComission);
+
+        wallet.setBalance(walletBalance.toString());
+
+        walletRepository.save(wallet);
+
+        if (staticWallet.getUrlCallback() != null) {
+            PaymentWebHookRequest paymentWebHookRequest = PaymentWebHookRequest.builder()
+                    .status(InvoiceStatus.SUCCESS)
+                    .type(CryptoTransactionWebHookType.WALLET)
+                    .paymentAmount(staticWalletTransactionWebHookRequest.getAmount().toString())
+                    .merchantAmount(staticWalletTransactionAmountWithComission.toString())
+                    .uuid(staticWallet.getUuid())
+                    .orderId(staticWallet.getOrderId())
+                    .network(staticWalletTransactionWebHookRequest.getNetwork())
+                    .token(staticWalletTransactionWebHookRequest.getToken())
+                    .txId(staticWalletTransactionWebHookRequest.getHash())
+                    .isFinal(true)
+                    .sign(sha256Util.encodeStringToSHA256(staticWallet.getUuid()
+                    + "&" + staticWallet.getOrderId() + "&" + staticWalletTransactionWebHookRequest.getAmount()
+                    + "&" + staticWalletTransactionWebHookRequest.getNetwork()
+                    + "&" + staticWalletTransactionWebHookRequest.getToken()
+                    + "&" + staticWalletMerchant.getApiKey()))
+                    .build();
+
+            cryptoTransactionWebHookApi.sendPayment(paymentWebHookRequest, staticWallet.getUrlCallback());
+        }
     }
 
     private String existsOnStaticWalletUuid(String uuid) {

@@ -1,4 +1,4 @@
-package by.panic.entomus.controller;
+package by.panic.entomus.controller.payment;
 
 import by.panic.entomus.payload.ExceptionHandler;
 import by.panic.entomus.payload.payment.invoice.*;

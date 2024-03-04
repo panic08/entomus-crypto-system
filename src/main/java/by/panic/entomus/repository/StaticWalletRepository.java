@@ -17,4 +17,5 @@ public interface StaticWalletRepository extends JpaRepository<StaticWallet, Long
     boolean existsByOrderIdAndMerchant(String orderId, Merchant merchant);
     StaticWallet findByUuid(String uuid);
     StaticWallet findByOrderId(String orderId);
+    StaticWallet findByWalletId(String walletId);
 }

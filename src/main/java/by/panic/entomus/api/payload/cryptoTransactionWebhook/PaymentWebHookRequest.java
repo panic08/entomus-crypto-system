@@ -22,8 +22,8 @@ public class PaymentWebHookRequest {
     private InvoiceStatus status;
     private String uuid;
     private String orderId;
-    private double amount;
-    private double payerAmount;
+    private Double amount;
+    private Double payerAmount;
     private String paymentAmount;
     private InvoicePaymentCurrency currency;
     private String merchantAmount;
