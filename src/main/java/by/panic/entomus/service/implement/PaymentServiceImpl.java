@@ -72,6 +72,10 @@ public class PaymentServiceImpl implements PaymentService {
     @Value("${staticWallets.url}")
     private String staticWalletsUrl;
 
+    /**
+     * This method is needed to create qrcode of invoice
+     */
+
     @Override
     public ResponseEntity<byte[]> createInvoiceQr(String apiKey, String uuid) {
         String address = invoiceRepository.findAddressByUuid(uuid);
@@ -93,6 +97,10 @@ public class PaymentServiceImpl implements PaymentService {
                 .contentType(MediaType.IMAGE_PNG)
                 .body(generatedAddress);
     }
+
+    /**
+     * This method is needed to create invoice (crypto payment)
+     */
 
     @Transactional
     @Override
@@ -462,7 +470,6 @@ public class PaymentServiceImpl implements PaymentService {
             }
         }
         newInvoice.setMerchantAmount(newInvoiceMerchantAmount.toString());
-//        newInvoice.setMerchantAmount(existsOnPendingMerchantAmount(newInvoiceMerchantAmountWithComs, newInvoice.getToken()).toString());
         newInvoice.setPaymentAmount(existsOnInvoicePendingPaymentAmount(newInvoicePaymentAmount, newInvoice.getToken()).toString());
 
         NodeFactoryReceiveResponse nodeFactoryReceiveResponse = nodeFactoryApi.receive(NodeFactoryReceiveRequest.builder()
@@ -486,7 +493,7 @@ public class PaymentServiceImpl implements PaymentService {
                 NodeFactoryGetStatusResponse nodeFactoryGetStatusResponse =
                         nodeFactoryApi.getStatus(nodeFactoryReceiveResponse.getId());
 
-                if (!nodeFactoryGetStatusResponse.getStatus().equals(NodeFactoryGetStatusStatus.SUCCESS)) {
+                if (nodeFactoryGetStatusResponse.getStatus().equals(NodeFactoryGetStatusStatus.SUCCESS)) {
                     finalNewInvoice.setStatus(InvoiceStatus.SUCCESS);
                     finalNewInvoice.setTxId(nodeFactoryGetStatusResponse.getHash());
                     finalNewInvoice.setIsFinal(true);
@@ -562,6 +569,10 @@ public class PaymentServiceImpl implements PaymentService {
                 .build();
     }
 
+    /**
+     * This method is needed to get info about the merchant invoice
+     */
+
     @Override
     public GetPaymentInvoiceInfoResponse getInvoiceInfo(String apiKey, String uuid, String orderId) {
         Merchant principalMerchant = merchantRepository.findByApiKey(apiKey);
@@ -581,6 +592,10 @@ public class PaymentServiceImpl implements PaymentService {
                 .result(invoiceToInvoiceDtoMapper.invoiceToInvoiceDto(principalInvoice))
                 .build();
     }
+
+    /**
+     * This method is needed to get history of merchant invoice
+     */
 
     @Override
     public GetPaymentInvoiceHistoryResponse getInvoiceHistory(String apiKey, Long dateFrom, Long dateTo) {
@@ -604,6 +619,10 @@ public class PaymentServiceImpl implements PaymentService {
                         .build())
                 .build();
     }
+
+    /**
+     * This method is needed to resend invoice webhook
+     */
 
     @Override
     public ResendPaymentInvoiceWebHookResponse resendInvoiceWebHook(String apiKey, ResendPaymentInvoiceWebHookRequest resendPaymentInvoiceWebhookRequest) {
@@ -659,6 +678,10 @@ public class PaymentServiceImpl implements PaymentService {
                 .build();
     }
 
+    /**
+     * This method is needed to test invoice webhook (simulate invoice webhook)
+     */
+
     @Override
     public TestPaymentInvoiceWebHookResponse testInvoiceWebHook(String apiKey, TestPaymentInvoiceWebHookRequest testPaymentInvoiceWebHookRequest) {
         if (!testPaymentInvoiceWebHookRequest.getStatus().equals(InvoiceStatus.SUCCESS)) {
@@ -685,6 +708,11 @@ public class PaymentServiceImpl implements PaymentService {
                 .result(new Object[]{})
                 .build();
     }
+
+    /**
+     * This method is needed to get invoice services
+     * All commissions charged from invoices and other information about invoices in the system
+     */
 
     @Override
     public GetPaymentInvoiceServiceResponse getInvoiceServices(String apiKey) {
@@ -887,6 +915,11 @@ public class PaymentServiceImpl implements PaymentService {
                 .build();
     }
 
+    /**
+     * This method is needed to create static wallet
+     * What is a static wallet - vc.ru/u/1139941-0xprocessing-kripto-platezhi/507534-3-tipa-platezhey-v-kriptovalyute-kak-rabotayut-static-wallet-depozity-s-fiksirovannoy-i-bez-fiksirovannoy-summy
+     */
+
     @Transactional
     @Override
     public CreateStaticWalletResponse createStaticWallet(String apiKey, CreateStaticWalletRequest createStaticWalletRequest) {
@@ -924,6 +957,11 @@ public class PaymentServiceImpl implements PaymentService {
                 .build();
     }
 
+    /**
+     * This method is needed to lock the static wallet.
+     * A blocked static wallet will not replenish the Merchant's business wallet balance during a transaction
+     */
+
     @Transactional
     @Override
     public BlockStaticWalletResponse blockStaticWallet(String apiKey, BlockStaticWalletRequest blockStaticWalletRequest) {
@@ -952,6 +990,10 @@ public class PaymentServiceImpl implements PaymentService {
                 .build();
     }
 
+    /**
+     * This method is needed to create qrcode of static wallet address
+     */
+
     @Override
     public ResponseEntity<byte[]> createStaticWalletQr(String apiKey, String uuid) {
         String address = staticWalletRepository.findAddressByUuid(uuid);
@@ -973,6 +1015,10 @@ public class PaymentServiceImpl implements PaymentService {
                 .contentType(MediaType.IMAGE_PNG)
                 .body(generatedAddress);
     }
+
+    /**
+     * This method is needed to process webhooks, when receiving a transaction to a static wallet
+     */
 
     @Transactional
     @Override
@@ -1040,6 +1086,10 @@ public class PaymentServiceImpl implements PaymentService {
         }
     }
 
+    /**
+     * This method is needed so that if there is already a transaction with a given amount in our system, the amount will be increased by n numbers
+     * In short, this method ensures the uniqueness of the amount in the system so that transactions are not confused (in cryptoApi).
+     */
     private BigInteger existsOnInvoicePendingPaymentAmount(BigInteger merchantAmount, CryptoToken token) {
         if (invoiceRepository.existsByPaymentAmountAndTokenAndStatus(merchantAmount.toString(), token, InvoiceStatus.PENDING)) {
             switch (token) {

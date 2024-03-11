@@ -16,6 +16,10 @@ import java.util.List;
 public class ExchangeRateServiceImpl implements ExchangeRateService {
     private final CryptoCurrency cryptoCurrency;
 
+    /**
+     * This method is needed to get the exchange rate of fiat currency translated to the specified cryptocurrency (@param from)
+     */
+
     @Override
     public GetExchangeRateListResponse getList(String apiKey, CryptoToken from) {
         List<GetExchangeRateListResponse.Result> getExchangeRateListResultList = new ArrayList<>();

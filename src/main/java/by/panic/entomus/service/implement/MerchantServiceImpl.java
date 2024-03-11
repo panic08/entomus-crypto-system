@@ -28,6 +28,10 @@ public class MerchantServiceImpl implements MerchantService {
     private final WalletRepository walletRepository;
     private final WalletToWalletDtoMapperImpl walletToWalletDtoMapper;
 
+    /**
+     * This method is needed to create merchant in the system
+     */
+
     @Transactional
     @Override
     public CreateMerchantResponse create() {
@@ -250,6 +254,10 @@ public class MerchantServiceImpl implements MerchantService {
                         .build())
                 .build();
     }
+
+    /**
+     * This method is needed to get merchant balance in the system
+     */
 
     @Override
     public GetMerchantBalanceResponse getBalance(String apiKey) {
