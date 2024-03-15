@@ -5,9 +5,9 @@ import by.panic.entomus.api.NodeFactoryApi;
 import by.panic.entomus.api.payload.cryptoTransactionWebhook.PayoutWebHookRequest;
 import by.panic.entomus.api.payload.nodeFactory.NodeFactorySendRequest;
 import by.panic.entomus.api.payload.nodeFactory.NodeFactorySendResponse;
+import by.panic.entomus.entity.BusinessWallet;
 import by.panic.entomus.entity.Merchant;
 import by.panic.entomus.entity.Payout;
-import by.panic.entomus.entity.Wallet;
 import by.panic.entomus.entity.enums.CryptoNetwork;
 import by.panic.entomus.entity.enums.CryptoToken;
 import by.panic.entomus.entity.enums.PayoutStatus;
@@ -18,7 +18,7 @@ import by.panic.entomus.payload.payout.*;
 import by.panic.entomus.property.PayoutLimitProperty;
 import by.panic.entomus.repository.MerchantRepository;
 import by.panic.entomus.repository.PayoutRepository;
-import by.panic.entomus.repository.WalletRepository;
+import by.panic.entomus.repository.BusinessWalletRepository;
 import by.panic.entomus.service.PayoutService;
 import by.panic.entomus.util.SHA256Util;
 import jakarta.transaction.Transactional;
@@ -40,7 +40,7 @@ import java.util.concurrent.ExecutorService;
 public class PayoutServiceImpl implements PayoutService {
     private final ExecutorService executorService;
     private final MerchantRepository merchantRepository;
-    private final WalletRepository walletRepository;
+    private final BusinessWalletRepository businessWalletRepository;
     private final PayoutRepository payoutRepository;
     private final NodeFactoryApi nodeFactoryApi;
     private final CryptoTransactionWebHookApi cryptoTransactionWebHookApi;
@@ -125,10 +125,10 @@ public class PayoutServiceImpl implements PayoutService {
 
         Merchant principalMerchant = merchantRepository.findByApiKey(apiKey);
 
-        Wallet payoutWallet = walletRepository.findByNetworkAndTokenAndMerchant(createPayoutRequest.getNetwork(), createPayoutRequest.getToken(),
+        BusinessWallet payoutBusinessWallet = businessWalletRepository.findByNetworkAndTokenAndMerchant(createPayoutRequest.getNetwork(), createPayoutRequest.getToken(),
                 principalMerchant);
 
-        BigDecimal payoutWalletBalanceDecimal = new BigDecimal(payoutWallet.getBalance());
+        BigDecimal payoutWalletBalanceDecimal = new BigDecimal(payoutBusinessWallet.getBalance());
 
         if (payoutWalletBalanceDecimal.compareTo(payoutAmountDecimal) < 0) {
             throw new PayoutException("Not enough funds");
@@ -154,9 +154,9 @@ public class PayoutServiceImpl implements PayoutService {
 
         String payoutWalletBalanceString = payoutWalletBalance.toString();
 
-        payoutWallet.setBalance(payoutWalletBalanceString);
+        payoutBusinessWallet.setBalance(payoutWalletBalanceString);
 
-        walletRepository.save(payoutWallet);
+        businessWalletRepository.save(payoutBusinessWallet);
 
         Payout newPayout = Payout.builder()
                 .status(PayoutStatus.SUCCESS)

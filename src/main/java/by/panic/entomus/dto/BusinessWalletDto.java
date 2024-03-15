@@ -8,8 +8,8 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@Schema(name = "Wallet")
-public class WalletDto {
+@Schema(name = "BusinessWallet")
+public class BusinessWalletDto {
     private String uuid;
 
     private CryptoNetwork network;

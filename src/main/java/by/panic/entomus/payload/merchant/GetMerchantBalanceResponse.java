@@ -1,7 +1,6 @@
 package by.panic.entomus.payload.merchant;
 
-import by.panic.entomus.dto.WalletDto;
-import by.panic.entomus.entity.Wallet;
+import by.panic.entomus.dto.BusinessWalletDto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;
@@ -21,6 +20,6 @@ public class GetMerchantBalanceResponse {
     @Builder
     @Schema(name = "GetMerchantBalanceResponseResult")
     public static class Result {
-        private List<WalletDto> balance;
+        private List<BusinessWalletDto> balance;
     }
 }

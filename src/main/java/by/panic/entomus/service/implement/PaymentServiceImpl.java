@@ -9,10 +9,10 @@ import by.panic.entomus.api.payload.nodeFactory.NodeFactoryReceiveResponse;
 import by.panic.entomus.api.payload.nodeFactory.enums.NodeFactoryGetStatusStatus;
 import by.panic.entomus.api.payload.cryptoTransactionWebhook.PaymentWebHookRequest;
 import by.panic.entomus.api.payload.cryptoTransactionWebhook.enums.CryptoTransactionWebHookType;
+import by.panic.entomus.entity.BusinessWallet;
 import by.panic.entomus.entity.Invoice;
 import by.panic.entomus.entity.Merchant;
 import by.panic.entomus.entity.StaticWallet;
-import by.panic.entomus.entity.Wallet;
 import by.panic.entomus.entity.enums.CryptoNetwork;
 import by.panic.entomus.entity.enums.CryptoToken;
 import by.panic.entomus.entity.enums.InvoiceStatus;
@@ -25,7 +25,7 @@ import by.panic.entomus.payload.payment.staticWallet.*;
 import by.panic.entomus.repository.InvoiceRepository;
 import by.panic.entomus.repository.MerchantRepository;
 import by.panic.entomus.repository.StaticWalletRepository;
-import by.panic.entomus.repository.WalletRepository;
+import by.panic.entomus.repository.BusinessWalletRepository;
 import by.panic.entomus.scheduler.CryptoCurrency;
 import by.panic.entomus.service.PaymentService;
 import by.panic.entomus.util.QrUtil;
@@ -54,7 +54,7 @@ import java.util.concurrent.ExecutorService;
 public class PaymentServiceImpl implements PaymentService {
     private final MerchantRepository merchantRepository;
     private final InvoiceRepository invoiceRepository;
-    private final WalletRepository walletRepository;
+    private final BusinessWalletRepository businessWalletRepository;
     private final StaticWalletRepository staticWalletRepository;
     private final NodeFactoryApi nodeFactoryApi;
     private final CryptoTransactionWebHookApi cryptoTransactionWebHookApi;
@@ -501,16 +501,16 @@ public class PaymentServiceImpl implements PaymentService {
 
                     invoiceRepository.save(finalNewInvoice);
 
-                    Wallet wallet = walletRepository.findByNetworkAndTokenAndMerchant(finalNewInvoice.getNetwork(),
+                    BusinessWallet businessWallet = businessWalletRepository.findByNetworkAndTokenAndMerchant(finalNewInvoice.getNetwork(),
                             finalNewInvoice.getToken(), finalNewInvoice.getMerchant());
 
-                    BigInteger walletBalance = new BigInteger(wallet.getBalance());
+                    BigInteger walletBalance = new BigInteger(businessWallet.getBalance());
 
                     walletBalance = walletBalance.add(finalNewInvoiceMerchantAmount);
 
-                    wallet.setBalance(walletBalance.toString());
+                    businessWallet.setBalance(walletBalance.toString());
 
-                    walletRepository.save(wallet);
+                    businessWalletRepository.save(businessWallet);
 
                     if (finalNewInvoice.getUrlCallback() != null) {
                         PaymentWebHookRequest webHookRequest = PaymentWebHookRequest.builder()
@@ -1032,10 +1032,10 @@ public class PaymentServiceImpl implements PaymentService {
 
         BigDecimal staticWalletTransactionAmountDecimal = new BigDecimal(staticWalletTransactionWebHookRequest.getAmount());
 
-        Wallet wallet = walletRepository.findByNetworkAndTokenAndMerchant(staticWalletTransactionWebHookRequest.getNetwork(),
+        BusinessWallet businessWallet = businessWalletRepository.findByNetworkAndTokenAndMerchant(staticWalletTransactionWebHookRequest.getNetwork(),
                 staticWalletTransactionWebHookRequest.getToken(), staticWalletMerchant);
 
-        BigInteger walletBalance = new BigInteger(wallet.getBalance());
+        BigInteger walletBalance = new BigInteger(businessWallet.getBalance());
 
         BigInteger staticWalletTransactionAmountWithComission =
                 staticWalletTransactionAmountDecimal.subtract(staticWalletTransactionAmountDecimal.multiply(BigDecimal.valueOf(paymentFee)))
@@ -1043,9 +1043,9 @@ public class PaymentServiceImpl implements PaymentService {
 
         walletBalance = walletBalance.add(staticWalletTransactionAmountWithComission);
 
-        wallet.setBalance(walletBalance.toString());
+        businessWallet.setBalance(walletBalance.toString());
 
-        walletRepository.save(wallet);
+        businessWalletRepository.save(businessWallet);
 
         if (staticWallet.getUrlCallback() != null) {
             PaymentWebHookRequest paymentWebHookRequest = PaymentWebHookRequest.builder()

@@ -1,15 +1,14 @@
 package by.panic.entomus.service.implement;
 
+import by.panic.entomus.entity.BusinessWallet;
 import by.panic.entomus.entity.Merchant;
-import by.panic.entomus.entity.Wallet;
 import by.panic.entomus.entity.enums.CryptoNetwork;
 import by.panic.entomus.entity.enums.CryptoToken;
-import by.panic.entomus.entity.enums.WalletType;
-import by.panic.entomus.mapper.WalletToWalletDtoMapperImpl;
+import by.panic.entomus.mapper.BusinessWalletToBusinessWalletDtoMapperImpl;
 import by.panic.entomus.payload.CreateMerchantResponse;
 import by.panic.entomus.payload.merchant.GetMerchantBalanceResponse;
 import by.panic.entomus.repository.MerchantRepository;
-import by.panic.entomus.repository.WalletRepository;
+import by.panic.entomus.repository.BusinessWalletRepository;
 import by.panic.entomus.service.MerchantService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -25,8 +24,8 @@ import java.util.UUID;
 @Slf4j
 public class MerchantServiceImpl implements MerchantService {
     private final MerchantRepository merchantRepository;
-    private final WalletRepository walletRepository;
-    private final WalletToWalletDtoMapperImpl walletToWalletDtoMapper;
+    private final BusinessWalletRepository businessWalletRepository;
+    private final BusinessWalletToBusinessWalletDtoMapperImpl businessWalletToBusinessWalletDtoMapper;
 
     /**
      * This method is needed to create merchant in the system
@@ -41,207 +40,189 @@ public class MerchantServiceImpl implements MerchantService {
                 .apiKey(existsOnApiKey(UUID.randomUUID().toString()))
                 .build();
 
-        List<Wallet> wallets = new ArrayList<>();
+        List<BusinessWallet> businessWallets = new ArrayList<>();
 
-        wallets.add(
-                Wallet.builder()
+        businessWallets.add(
+                BusinessWallet.builder()
                         .merchant(merchant)
                         .uuid(existsOnWalletUUID(UUID.randomUUID().toString()))
                         .network(CryptoNetwork.AVAX)
                         .token(CryptoToken.AVAX)
-                        .type(WalletType.BUSINESS)
                         .balance("0")
                         .build()
         );
 
-        wallets.add(
-                Wallet.builder()
+        businessWallets.add(
+                BusinessWallet.builder()
                         .merchant(merchant)
                         .uuid(existsOnWalletUUID(UUID.randomUUID().toString()))
                         .network(CryptoNetwork.BTC)
                         .token(CryptoToken.BTC)
-                        .type(WalletType.BUSINESS)
                         .balance("0")
                         .build()
         );
 
-        wallets.add(
-                Wallet.builder()
+        businessWallets.add(
+                BusinessWallet.builder()
                         .merchant(merchant)
                         .uuid(existsOnWalletUUID(UUID.randomUUID().toString()))
                         .network(CryptoNetwork.LTC)
                         .token(CryptoToken.LTC)
-                        .type(WalletType.BUSINESS)
                         .balance("0")
                         .build()
         );
 
-        wallets.add(
-                Wallet.builder()
+        businessWallets.add(
+                BusinessWallet.builder()
                         .merchant(merchant)
                         .uuid(existsOnWalletUUID(UUID.randomUUID().toString()))
                         .network(CryptoNetwork.BCH)
                         .token(CryptoToken.BCH)
-                        .type(WalletType.BUSINESS)
                         .balance("0")
                         .build()
         );
 
-        wallets.add(
-                Wallet.builder()
+        businessWallets.add(
+                BusinessWallet.builder()
                         .merchant(merchant)
                         .uuid(existsOnWalletUUID(UUID.randomUUID().toString()))
                         .network(CryptoNetwork.BNB)
                         .token(CryptoToken.BNB)
-                        .type(WalletType.BUSINESS)
                         .balance("0")
                         .build()
         );
 
-        wallets.add(
-                Wallet.builder()
+        businessWallets.add(
+                BusinessWallet.builder()
                         .merchant(merchant)
                         .uuid(existsOnWalletUUID(UUID.randomUUID().toString()))
                         .network(CryptoNetwork.ETC)
                         .token(CryptoToken.ETC)
-                        .type(WalletType.BUSINESS)
                         .balance("0")
                         .build()
         );
 
-        wallets.add(
-                Wallet.builder()
+        businessWallets.add(
+                BusinessWallet.builder()
                         .merchant(merchant)
                         .uuid(existsOnWalletUUID(UUID.randomUUID().toString()))
                         .network(CryptoNetwork.ETH)
                         .token(CryptoToken.ETH)
-                        .type(WalletType.BUSINESS)
                         .balance("0")
                         .build()
         );
 
-        wallets.add(
-                Wallet.builder()
+        businessWallets.add(
+                BusinessWallet.builder()
                         .merchant(merchant)
                         .uuid(existsOnWalletUUID(UUID.randomUUID().toString()))
                         .network(CryptoNetwork.POLYGON)
                         .token(CryptoToken.MATIC)
-                        .type(WalletType.BUSINESS)
                         .balance("0")
                         .build()
         );
 
-        wallets.add(
-                Wallet.builder()
+        businessWallets.add(
+                BusinessWallet.builder()
                         .merchant(merchant)
                         .uuid(existsOnWalletUUID(UUID.randomUUID().toString()))
                         .network(CryptoNetwork.SOL)
                         .token(CryptoToken.SOL)
-                        .type(WalletType.BUSINESS)
                         .balance("0")
                         .build()
         );
 
-        wallets.add(
-                Wallet.builder()
+        businessWallets.add(
+                BusinessWallet.builder()
                         .merchant(merchant)
                         .uuid(existsOnWalletUUID(UUID.randomUUID().toString()))
                         .network(CryptoNetwork.TRX)
                         .token(CryptoToken.TRX)
-                        .type(WalletType.BUSINESS)
                         .balance("0")
                         .build()
         );
 
-        wallets.add(
-                Wallet.builder()
+        businessWallets.add(
+                BusinessWallet.builder()
                         .merchant(merchant)
                         .uuid(existsOnWalletUUID(UUID.randomUUID().toString()))
                         .network(CryptoNetwork.ETH)
                         .token(CryptoToken.USDT)
-                        .type(WalletType.BUSINESS)
                         .balance("0")
                         .build()
         );
 
-        wallets.add(
-                Wallet.builder()
+        businessWallets.add(
+                BusinessWallet.builder()
                         .merchant(merchant)
                         .uuid(existsOnWalletUUID(UUID.randomUUID().toString()))
                         .network(CryptoNetwork.ETH)
                         .token(CryptoToken.USDC)
-                        .type(WalletType.BUSINESS)
                         .balance("0")
                         .build()
         );
 
-        wallets.add(
-                Wallet.builder()
+        businessWallets.add(
+                BusinessWallet.builder()
                         .merchant(merchant)
                         .uuid(existsOnWalletUUID(UUID.randomUUID().toString()))
                         .network(CryptoNetwork.ETH)
                         .token(CryptoToken.DAI)
-                        .type(WalletType.BUSINESS)
                         .balance("0")
                         .build()
         );
 
-        wallets.add(
-                Wallet.builder()
+        businessWallets.add(
+                BusinessWallet.builder()
                         .merchant(merchant)
                         .uuid(existsOnWalletUUID(UUID.randomUUID().toString()))
                         .network(CryptoNetwork.TRX)
                         .token(CryptoToken.USDT)
-                        .type(WalletType.BUSINESS)
                         .balance("0")
                         .build()
         );
 
-        wallets.add(
-                Wallet.builder()
+        businessWallets.add(
+                BusinessWallet.builder()
                         .merchant(merchant)
                         .uuid(existsOnWalletUUID(UUID.randomUUID().toString()))
                         .network(CryptoNetwork.TRX)
                         .token(CryptoToken.USDC)
-                        .type(WalletType.BUSINESS)
                         .balance("0")
                         .build()
         );
 
-        wallets.add(
-                Wallet.builder()
+        businessWallets.add(
+                BusinessWallet.builder()
                         .merchant(merchant)
                         .uuid(existsOnWalletUUID(UUID.randomUUID().toString()))
                         .network(CryptoNetwork.BNB)
                         .token(CryptoToken.USDT)
-                        .type(WalletType.BUSINESS)
                         .balance("0")
                         .build()
         );
 
-        wallets.add(
-                Wallet.builder()
+        businessWallets.add(
+                BusinessWallet.builder()
                         .merchant(merchant)
                         .uuid(existsOnWalletUUID(UUID.randomUUID().toString()))
                         .network(CryptoNetwork.BNB)
                         .token(CryptoToken.USDC)
-                        .type(WalletType.BUSINESS)
                         .balance("0")
                         .build()
         );
 
-        wallets.add(
-                Wallet.builder()
+        businessWallets.add(
+                BusinessWallet.builder()
                         .merchant(merchant)
                         .uuid(existsOnWalletUUID(UUID.randomUUID().toString()))
                         .network(CryptoNetwork.BNB)
                         .token(CryptoToken.DAI)
-                        .type(WalletType.BUSINESS)
                         .balance("0")
                         .build()
         );
 
-        merchant.setWallets(wallets);
+        merchant.setBusinessWallets(businessWallets);
 
         merchantRepository.save(merchant);
 
@@ -264,8 +245,8 @@ public class MerchantServiceImpl implements MerchantService {
         return GetMerchantBalanceResponse.builder()
                 .state(0)
                 .result(GetMerchantBalanceResponse.Result.builder()
-                        .balance(walletToWalletDtoMapper
-                                .walletListToWalletDtoList(merchantRepository.findByApiKey(apiKey).getWallets()))
+                        .balance(businessWalletToBusinessWalletDtoMapper
+                                .businessWalletListToBusinessWalletDtoList(merchantRepository.findByApiKey(apiKey).getBusinessWallets()))
                         .build())
                 .build();
     }
@@ -279,7 +260,7 @@ public class MerchantServiceImpl implements MerchantService {
     }
 
     private String existsOnWalletUUID(String uuid) {
-        if (walletRepository.existsByUuid(uuid)) {
+        if (businessWalletRepository.existsByUuid(uuid)) {
             return existsOnWalletUUID(UUID.randomUUID().toString());
         } else {
             return uuid;

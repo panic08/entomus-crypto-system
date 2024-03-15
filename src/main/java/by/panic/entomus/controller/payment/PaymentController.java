@@ -65,7 +65,7 @@ public class PaymentController {
             description = "We got the 'X-API-KEY' in the response of the /api/v1/merchant",
             required = true,
             content = @Content(schema = @Schema(implementation = String.class)))
-    @PostMapping
+    @PostMapping("/invoice")
     public CreatePaymentInvoiceResponse createInvoice(@RequestHeader(name = "X-API-KEY") String apiKey,
                                                       @Validated @RequestBody CreatePaymentInvoiceRequest createPaymentInvoiceRequest) {
         merchantSecurity.checkOnCorrectMerchant(apiKey);
@@ -165,13 +165,13 @@ public class PaymentController {
         return paymentService.getInvoiceServices(apiKey);
     }
 
-    @Operation(description = "Creating a Static wallet")
+    @Operation(description = "Creating a payment static wallet")
     @Parameter(in = ParameterIn.HEADER, name = "X-API-KEY",
             description = "We got the 'X-API-KEY' in the response of the /api/v1/merchant",
             required = true,
             content = @Content(schema = @Schema(implementation = String.class)))
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "You have successfully created an Static-Wallet and received a \"CreateStaticWalletResponse\"",
+            @ApiResponse(responseCode = "200", description = "You have successfully created an payment static wallet and received a \"CreateStaticWalletResponse\"",
                     content = {@Content(mediaType = "application/json", schema = @Schema(implementation = CreateStaticWalletResponse.class))}),
             @ApiResponse(responseCode = "400", description = "Incorrect X-API-KEY || Network not may be null || Token not may be null || Order_id not may be null || Order_id must be a string consisting of alphabetic characters, numbers, underscores, and dashes " +
                     "|| Order_id must contain from 1 to 128 characters || Url_callback must contain from 6 to 255 characters " +
@@ -186,13 +186,13 @@ public class PaymentController {
         return paymentService.createStaticWallet(apiKey, createStaticWalletRequest);
     }
 
-    @Operation(description = "Block static wallet")
+    @Operation(description = "Block payment static wallet")
     @Parameter(in = ParameterIn.HEADER, name = "X-API-KEY",
             description = "We got the 'X-API-KEY' in the response of the /api/v1/merchant",
             required = true,
             content = @Content(schema = @Schema(implementation = String.class)))
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "You have successfully block static wallet",
+            @ApiResponse(responseCode = "200", description = "You have successfully block payment static wallet",
                     content = {@Content(mediaType = "application/json", schema = @Schema(implementation = CreateStaticWalletResponse.class))}),
             @ApiResponse(responseCode = "400", description = "Incorrect X-API-KEY || You do not have a static wallet with that uuid or order_id",
                     content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionHandler.class))})
@@ -205,13 +205,13 @@ public class PaymentController {
         return paymentService.blockStaticWallet(apiKey, blockStaticWalletRequest);
     }
 
-    @Operation(description = "Generate a QR-code for the static wallet address")
+    @Operation(description = "Generate a QR-code for the payment static wallet address")
     @Parameter(in = ParameterIn.HEADER, name = "X-API-KEY",
             description = "We got the 'X-API-KEY' in the response of the /api/v1/merchant",
             required = true,
             content = @Content(schema = @Schema(implementation = String.class)))
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "We have got QR-code for the static wallet address"),
+            @ApiResponse(responseCode = "200", description = "We have got QR-code for the payment static wallet address"),
             @ApiResponse(responseCode = "400", description = "Incorrect X-API-KEY",
                     content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionHandler.class))}),
             @ApiResponse(responseCode = "404", description = "Static wallet not found")

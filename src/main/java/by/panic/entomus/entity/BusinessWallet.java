@@ -2,29 +2,24 @@ package by.panic.entomus.entity;
 
 import by.panic.entomus.entity.enums.CryptoNetwork;
 import by.panic.entomus.entity.enums.CryptoToken;
-import by.panic.entomus.entity.enums.WalletType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Entity(name = "wallets_table")
+@Entity(name = "business_wallets_table")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class Wallet {
+public class BusinessWallet {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(name = "uuid", unique = true, nullable = false)
     private String uuid;
-
-    @Column(name = "type", nullable = false)
-    @Enumerated(value = EnumType.STRING)
-    private WalletType type;
 
     @Column(name = "network", nullable = false)
     @Enumerated(value = EnumType.STRING)

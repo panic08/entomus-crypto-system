@@ -5,17 +5,15 @@ import by.panic.entomus.entity.enums.CryptoToken;
 import by.panic.entomus.entity.enums.InvoicePaymentCurrency;
 import by.panic.entomus.entity.enums.InvoiceStatus;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity(name = "invoices_table")
+@EqualsAndHashCode(callSuper = true)
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class Invoice {
+public class Invoice extends Payment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

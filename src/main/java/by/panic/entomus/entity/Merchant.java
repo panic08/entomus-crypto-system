@@ -22,7 +22,7 @@ public class Merchant {
     private String apiKey;
 
     @OneToMany(mappedBy = "merchant", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<Wallet> wallets;
+    private List<BusinessWallet> businessWallets;
 
     @OneToMany(mappedBy = "merchant", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Invoice> invoices;
